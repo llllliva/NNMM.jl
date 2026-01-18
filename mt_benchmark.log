@@ -1,1378 +1,0 @@
-======================================================================
-NNMM Benchmark for PyNNMM Parity Testing
-======================================================================
-Date: 2025-12-31T18:03:17.251
-
-Loading simulated dataset...
-  Individuals: 3534
-  SNPs: 1000 (927 after MAF filtering)
-  Omics: 10
-
-Running MCMC (chain_length=1000, burnin=200, seed=42)...
-The folder /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output is created to save results.
-********************************************************** 
-Start reading genotypes.......
-
-Reading 1th genotypes from /Users/haocheng/Github/AFOCUS/NNMM.jl/src/datasets/data/simulated_omics_data/genotypes_1000snps.txt 
-The delimiter in genotypes_1000snps.txt is ','. The header (marker IDs) is provided in genotypes_1000snps.txt.
-Missing values (9.0) are replaced by column means.
-73 loci which are fixed or have minor allele frequency < 0.01 are removed.
-Genotype informatin:
-#markers: 927; #individuals: 3534
-In fully connected network, the name of genotypes (1st layer) is set to geno.
-End reading genotypes.......
- 
-********************************************************** 
-Start reading omics .......
-
-Reading omics from /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/omics.csv 
-Note that `center`, `quality_control`, and `MAF` in Layer() function are set to false here forcefully, so please use pre-processed omics data 
-Note that `constraint` is set to false here forcefully 
-The delimiter in omics.csv is ','. The header (omics IDs) is provided in omics.csv.
-The missing value NA is replaced by  `missing`, and will be sampled in MCMC.
-Omics informatin:
-#omics: 10; #individuals: 3534
-omics name: ["omic1", "omic2", "omic3", "omic4", "omic5", "omic6", "omic7", "omic8", "omic9", "omic10"]
-First 5 rows and 3 columns of omics data: 
-5×4 DataFrame
- Row │ ID      omic1      omic2      omic3
-     │ String  Float64    Float64    Float64
-─────┼────────────────────────────────────────
-   1 │ 584      1.91394   -1.70169   0.785682
-   2 │ 585      0.87441   -0.14034   1.69724
-   3 │ 587      0.337365   0.590374  1.06398
-   4 │ 588     -0.306191   1.66217   0.974783
-   5 │ 589      1.14822   -0.585047  1.20013
-End reading omics.......
- 
-********************************************************** 
-Start reading phenotypes.......
-
-Reading phenotypes from /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/phenotypes.csv 
-The delimiter in phenotypes.csv is ','. The header (pheno IDs) is provided in phenotypes.csv.
-The missing value (NA) is set to `missing`.
-Phenotypes data information:
-#pheno: 1; #individuals: 3534
-phenotype name: ["trait1"]
-First 5 rows of phenotypes (and other covariates/random effects data): 
-5×2 DataFrame
- Row │ ID      trait1
-     │ String  Float64
-─────┼───────────────────
-   1 │ 584     -0.075616
-   2 │ 585     -0.734341
-   3 │ 587      0.959551
-   4 │ 588     -2.86439
-   5 │ 589     -1.29045
-End reading phenotypes.......
- 
-********************************************************** 
-Start checking input data....... 
-
-End checking input data....... 
- 
-******************** NNMM information ******************** 
- - From 1st->2nd layers:             fully connected network. 
-   - Number of nodes:     927. 
- - From 2nd->3rd layers: 
-   - Number of nodes:     10. 
- - Activation function in 2nd layer: linear.
- - Sample missing data in 2nd layer: Hamiltonian Monte Carlo. 
- - Model equation 1->2:
-    omic1=intercept + geno
-    omic2=intercept + geno
-    omic3=intercept + geno
-    omic4=intercept + geno
-    omic5=intercept + geno
-    omic6=intercept + geno
-    omic7=intercept + geno
-    omic8=intercept + geno
-    omic9=intercept + geno
-    omic10=intercept + geno
- - Model equation 2->3:
-    trait1=intercept + omics
-********************************************************** 
-Start build mme for 1->2....... 
-End build mme for layer 1->2....... 
- 
-********************************************************** 
-Start build mme for layer 2->3....... 
-End build mme for 2->3....... 
- 
-********************************************************** 
-Start prepare MCMC....... 
-check errors args for 1->2 
-check errors args for 2->3 
-check pedigree genotypes phenotypes 
-Checking genotypes...
-Checking phenotypes...
-Individual IDs (strings) are provided in the first column of the phenotypic data.
-Checking genotypes...
-Checking phenotypes...
-Individual IDs (strings) are provided in the first column of the phenotypic data.
-initialize missing omics data 
-1->2 prediction setup: 
-Predicted values for individuals of interest will be obtained as the summation of Any[] (Note that genomic data is always included for now).
-2->3 prediction setup: 
-Predicted values for individuals of interest will be obtained as the summation of Any[] (Note that genomic data is always included for now).
-1->2 make_dataframes: 
-Make dataframes for NNMM omics 
-Phenotypes for 3534 observations are used in the analysis.These individual IDs are saved in the file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/IDs_for_individuals_with_phenotypes.txt.
-
-2->3 make_dataframes: 
-Phenotypes for 3534 observations are used in the analysis.These individual IDs are saved in the file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/IDs_for_individuals_with_phenotypes.txt.
-
-1->2 set_default_priors_for_variance_components: 
-Prior information for genomic variance is not provided and is generated from the data.
-Prior information for residual variance is not provided and is generated from the data.
-
-Pi (Π) is not provided.
-Pi (Π) is generated assuming all markers have effects on all traits.
-
-The prior for marker effects covariance matrix is calculated from genetic covariance matrix and Π.
-The mean of the prior for the marker effects covariance matrix is:
- 0.001692  0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0
- 0.0       0.001689  0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0
- 0.0       0.0       0.001713  0.0       0.0       0.0       0.0       0.0       0.0       0.0
- 0.0       0.0       0.0       0.001724  0.0       0.0       0.0       0.0       0.0       0.0
- 0.0       0.0       0.0       0.0       0.001688  0.0       0.0       0.0       0.0       0.0
- 0.0       0.0       0.0       0.0       0.0       0.001779  0.0       0.0       0.0       0.0
- 0.0       0.0       0.0       0.0       0.0       0.0       0.001648  0.0       0.0       0.0
- 0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.001739  0.0       0.0
- 0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.001701  0.0
- 0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.001678
-
-
-
-2->3 set_default_priors_for_variance_components: 
-Prior information for genomic variance is not provided and is generated from the data.
-Prior information for residual variance is not provided and is generated from the data.
-
-The prior for marker effects variance is calculated from the genetic variance and π.
-The mean of the prior for the marker effects variance is: 0.098539
-
-
-
-Describe layer 1->2: 
-
-A Linear Mixed Model was build using model equations:
-
-omic1=intercept + geno
-omic2=intercept + geno
-omic3=intercept + geno
-omic4=intercept + geno
-omic5=intercept + geno
-omic6=intercept + geno
-omic7=intercept + geno
-omic8=intercept + geno
-omic9=intercept + geno
-omic10=intercept + geno
-
-Model Information:
-
-Term            C/F          F/R            nLevels
-intercept       factor       fixed                1
-
-MCMC Information:
-
-chain_length                                   1000
-burnin                                          200
-starting_value                                 true
-printout_frequency                             1001
-output_samples_frequency                          1
-constraint on residual variance                true
-constraint on marker effect variance for geno  true
-missing_phenotypes                            false
-update_priors_frequency                           0
-seed                                          false
-
-Hyper-parameters Information:
-
-residual variances:           
- 0.496  0.0    0.0    0.0    0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.495  0.0    0.0    0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.502  0.0    0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.505  0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.495  0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.522  0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.483  0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.51  0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0   0.499  0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0   0.0    0.492
-
-Genomic Information:
-
-complete genomic data (i.e., non-single-step analysis)
-
-Genomic Category                               geno
-Method                                       BayesC
-genetic variances (genomic):  
- 0.496  0.0    0.0    0.0    0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.495  0.0    0.0    0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.502  0.0    0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.505  0.0    0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.495  0.0    0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.522  0.0    0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.483  0.0   0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.51  0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0   0.499  0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0   0.0    0.492
-marker effect variances:      
- 0.002  0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
- 0.0    0.002  0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
- 0.0    0.0    0.002  0.0    0.0    0.0    0.0    0.0    0.0    0.0
- 0.0    0.0    0.0    0.002  0.0    0.0    0.0    0.0    0.0    0.0
- 0.0    0.0    0.0    0.0    0.002  0.0    0.0    0.0    0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.002  0.0    0.0    0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.002  0.0    0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.002  0.0    0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.002  0.0
- 0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.002
-
-Π: (Y(yes):included; N(no):excluded)
-
-["omic1", "omic2", "omic3", "omic4", "omic5", "omic6", "omic7", "omic8", "omic9", "omic10"]         probability
-["N", "N", "Y", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 1.0
-["N", "N", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", running MCMC ...   0%|▏                                  |  ETA: 0:33:37[Krunning MCMC ...   2%|▊                                  |  ETA: 0:03:29[Krunning MCMC ...   3%|█                                  |  ETA: 0:02:37[Krunning MCMC ...   4%|█▎                                 |  ETA: 0:02:13[Krunning MCMC ...   4%|█▌                                 |  ETA: 0:01:56[Krunning MCMC ...   5%|█▋                                 |  ETA: 0:01:43[Krunning MCMC ...   5%|█▉                                 |  ETA: 0:01:33[Krunning MCMC ...   6%|██▏                                |  ETA: 0:01:25[Krunning MCMC ...   6%|██▎                                |  ETA: 0:01:20[Krunning MCMC ...   7%|██▌                                |  ETA: 0:01:15[Krunning MCMC ...   8%|██▋                                |  ETA: 0:01:11[Krunning MCMC ...   8%|██▊                                |  ETA: 0:01:08[Krunning MCMC ...   8%|███                                |  ETA: 0:01:05[Krunning MCMC ...   9%|███▏                               |  ETA: 0:01:01[Krunning MCMC ...  10%|███▍                               |  ETA: 0:00:58[Krunning MCMC ...  10%|███▌                               |  ETA: 0:00:57[Krunning MCMC ...  10%|███▋                               |  ETA: 0:00:56[Krunning MCMC ...  11%|███▉                               |  ETA: 0:00:53[Krunning MCMC ...  12%|████▏                              |  ETA: 0:00:51[Krunning MCMC ...  12%|████▎                              |  ETA: 0:00:49[Krunning MCMC ...  13%|████▌                              |  ETA: 0:00:48[Krunning MCMC ...  13%|████▋                              |  ETA: 0:00:47[Krunning MCMC ...  14%|████▉                              |  ETA: 0:00:45[Krunning MCMC ...  14%|█████                              |  ETA: 0:00:45[Krunning MCMC ...  15%|█████▏                             |  ETA: 0:00:44[Krunning MCMC ...  15%|█████▎                             |  ETA: 0:00:43[Krunning MCMC ...  16%|█████▍                             |  ETA: 0:00:42[Krunning MCMC ...  16%|█████▋                             |  ETA: 0:00:42[Krunning MCMC ...  16%|█████▊                             |  ETA: 0:00:41[Krunning MCMC ...  17%|█████▉                             |  ETA: 0:00:40[Krunning MCMC ...  17%|██████                             |  ETA: 0:00:39[Krunning MCMC ...  18%|██████▎                            |  ETA: 0:00:39[Krunning MCMC ...  18%|██████▍                            |  ETA: 0:00:38[Krunning MCMC ...  18%|██████▌                            |  ETA: 0:00:38[Krunning MCMC ...  19%|██████▋                            |  ETA: 0:00:37[Krunning MCMC ...  19%|██████▊                            |  ETA: 0:00:37[Krunning MCMC ...  20%|██████▉                            |  ETA: 0:00:37[Krunning MCMC ...  20%|███████                            |  ETA: 0:00:36[Krunning MCMC ...  20%|███████▏                           |  ETA: 0:00:41[Krunning MCMC ...  21%|███████▎                           |  ETA: 0:00:41[Krunning MCMC ...  21%|███████▍                           |  ETA: 0:00:40[Krunning MCMC ...  21%|███████▍                           |  ETA: 0:00:40[Krunning MCMC ...  22%|███████▌                           |  ETA: 0:00:39[Krunning MCMC ...  22%|███████▋                           |  ETA: 0:00:39[Krunning MCMC ...  22%|███████▊                           |  ETA: 0:00:39[Krunning MCMC ...  23%|████████                           |  ETA: 0:00:38[Krunning MCMC ...  23%|████████                           |  ETA: 0:00:38[Krunning MCMC ...  23%|████████▏                          |  ETA: 0:00:38[Krunning MCMC ...  24%|████████▎                          |  ETA: 0:00:38[Krunning MCMC ...  24%|████████▍                          |  ETA: 0:00:37[Krunning MCMC ...  24%|████████▌                          |  ETA: 0:00:37[Krunning MCMC ...  24%|████████▋                          |  ETA: 0:00:37[Krunning MCMC ...  25%|████████▊                          |  ETA: 0:00:36[Krunning MCMC ...  25%|████████▊                          |  ETA: 0:00:36[Krunning MCMC ...  25%|████████▉                          |  ETA: 0:00:36[Krunning MCMC ...  26%|████████▉                          |  ETA: 0:00:36[Krunning MCMC ...  26%|█████████                          |  ETA: 0:00:36[Krunning MCMC ...  26%|█████████▏                         |  ETA: 0:00:36[Krunning MCMC ...  26%|█████████▎                         |  ETA: 0:00:36[Krunning MCMC ...  27%|█████████▎                         |  ETA: 0:00:35[Krunning MCMC ...  27%|█████████▍                         |  ETA: 0:00:35[Krunning MCMC ...  27%|█████████▌                         |  ETA: 0:00:35[Krunning MCMC ...  28%|█████████▋                         |  ETA: 0:00:35[Krunning MCMC ...  28%|█████████▊                         |  ETA: 0:00:34[Krunning MCMC ...  28%|█████████▉                         |  ETA: 0:00:34[Krunning MCMC ...  28%|██████████                         |  ETA: 0:00:34[Krunning MCMC ...  29%|██████████                         |  ETA: 0:00:34[Krunning MCMC ...  29%|██████████▏                        |  ETA: 0:00:34[Krunning MCMC ...  29%|██████████▎                        |  ETA: 0:00:33[Krunning MCMC ...  30%|██████████▍                        |  ETA: 0:00:33[Krunning MCMC ...  30%|██████████▌                        |  ETA: 0:00:33[Krunning MCMC ...  30%|██████████▋                        |  ETA: 0:00:33[Krunning MCMC ...  30%|██████████▋                        |  ETA: 0:00:33[Krunning MCMC ...  31%|██████████▊                        |  ETA: 0:00:32[Krunning MCMC ...  31%|██████████▉                        |  ETA: 0:00:32[Krunning MCMC ...  31%|███████████                        |  ETA: 0:00:32[Krunning MCMC ...  32%|███████████▏                       |  ETA: 0:00:32[Krunning MCMC ...  32%|███████████▎                       |  ETA: 0:00:32[Krunning MCMC ...  32%|███████████▍                       |  ETA: 0:00:31[Krunning MCMC ...  33%|███████████▌                       |  ETA: 0:00:31[Krunning MCMC ...  33%|███████████▌                       |  ETA: 0:00:31[Krunning MCMC ...  33%|███████████▋                       |  ETA: 0:00:31[Krunning MCMC ...  34%|███████████▊                       |  ETA: 0:00:31[Krunning MCMC ...  34%|███████████▉                       |  ETA: 0:00:30[Krunning MCMC ...  34%|████████████                       |  ETA: 0:00:30[Krunning MCMC ...  35%|████████████▏                      |  ETA: 0:00:30[Krunning MCMC ...  35%|████████████▎                      |  ETA: 0:00:30[Krunning MCMC ...  35%|████████████▍                      |  ETA: 0:00:29[Krunning MCMC ...  36%|████████████▌                      |  ETA: 0:00:29[Krunning MCMC ...  36%|████████████▌                      |  ETA: 0:00:29[Krunning MCMC ...  36%|████████████▋                      |  ETA: 0:00:29[Krunning MCMC ...  36%|████████████▊                      |  ETA: 0:00:29[Krunning MCMC ...  37%|████████████▊                      |  ETA: 0:00:29[Krunning MCMC ...  37%|████████████▉                      |  ETA: 0:00:29[Krunning MCMC ...  37%|█████████████                      |  ETA: 0:00:29[Krunning MCMC ...  37%|█████████████▏                     |  ETA: 0:00:29[Krunning MCMC ...  38%|█████████████▏                     |  ETA: 0:00:29[Krunning MCMC ...  38%|█████████████▎                     |  ETA: 0:00:28[Krunning MCMC ...  38%|█████████████▎                     |  ETA: 0:00:28[Krunning MCMC ...  38%|█████████████▍                     |  ETA: 0:00:28[Krunning MCMC ...  39%|█████████████▌                     |  ETA: 0:00:28[Krunning MCMC ...  39%|█████████████▋                     |  ETA: 0:00:28[Krunning MCMC ...  39%|█████████████▋                     |  ETA: 0:00:28[Krunning MCMC ...  39%|█████████████▊                     |  ETA: 0:00:28[Krunning MCMC ...  39%|█████████████▊                     |  ETA: 0:00:28[Krunning MCMC ...  40%|█████████████▉                     |  ETA: 0:00:28[Krunning MCMC ...  40%|██████████████                     |  ETA: 0:00:28[Krunning MCMC ...  40%|██████████████▏                    |  ETA: 0:00:28[Krunning MCMC ...  40%|██████████████▏                    |  ETA: 0:00:28[Krunning MCMC ...  41%|██████████████▎                    |  ETA: 0:00:28[Krunning MCMC ...  41%|██████████████▎                    |  ETA: 0:00:28[Krunning MCMC ...  41%|██████████████▍                    |  ETA: 0:00:28[Krunning MCMC ...  41%|██████████████▌                    |  ETA: 0:00:28[Krunning MCMC ...  42%|██████████████▌                    |  ETA: 0:00:28[Krunning MCMC ...  42%|██████████████▊                    |  ETA: 0:00:28[Krunning MCMC ...  42%|██████████████▉                    |  ETA: 0:00:27[Krunning MCMC ...  43%|██████████████▉                    |  ETA: 0:00:27[Krunning MCMC ...  43%|███████████████                    |  ETA: 0:00:27[Krunning MCMC ...  43%|███████████████▏                   |  ETA: 0:00:27[Krunning MCMC ...  44%|███████████████▎                   |  ETA: 0:00:27[Krunning MCMC ...  44%|███████████████▍                   |  ETA: 0:00:26[Krunning MCMC ...  44%|███████████████▌                   |  ETA: 0:00:26[Krunning MCMC ...  44%|███████████████▌                   |  ETA: 0:00:26[Krunning MCMC ...  45%|███████████████▋                   |  ETA: 0:00:26[Krunning MCMC ...  45%|███████████████▋                   |  ETA: 0:00:26[Krunning MCMC ...  45%|███████████████▊                   |  ETA: 0:00:26[Krunning MCMC ...  45%|███████████████▉                   |  ETA: 0:00:26[Krunning MCMC ...  46%|████████████████                   |  ETA: 0:00:26[Krunning MCMC ...  46%|████████████████▏                  |  ETA: 0:00:26[Krunning MCMC ...  46%|████████████████▏                  |  ETA: 0:00:26[Krunning MCMC ...  46%|████████████████▎                  |  ETA: 0:00:25[Krunning MCMC ...  47%|████████████████▍                  |  ETA: 0:00:25[Krunning MCMC ...  47%|████████████████▌                  |  ETA: 0:00:25[Krunning MCMC ...  47%|████████████████▌                  |  ETA: 0:00:25[Krunning MCMC ...  48%|████████████████▋                  |  ETA: 0:00:25[Krunning MCMC ...  48%|████████████████▊                  |  ETA: 0:00:25[Krunning MCMC ...  48%|████████████████▉                  |  ETA: 0:00:24[Krunning MCMC ...  48%|█████████████████                  |  ETA: 0:00:24[Krunning MCMC ...  49%|█████████████████▏                 |  ETA: 0:00:24[Krunning MCMC ...  49%|█████████████████▏                 |  ETA: 0:00:24[Krunning MCMC ...  49%|█████████████████▎                 |  ETA: 0:00:24[Krunning MCMC ...  50%|█████████████████▍                 |  ETA: 0:00:24[Krunning MCMC ...  50%|█████████████████▌                 |  ETA: 0:00:23[Krunning MCMC ...  50%|█████████████████▋                 |  ETA: 0:00:23[Krunning MCMC ...  51%|█████████████████▊                 |  ETA: 0:00:23[Krunning MCMC ...  51%|█████████████████▉                 |  ETA: 0:00:23[Krunning MCMC ...  51%|██████████████████                 |  ETA: 0:00:23[Krunning MCMC ...  52%|██████████████████                 |  ETA: 0:00:23[Krunning MCMC ...  52%|██████████████████▏                |  ETA: 0:00:23[Krunning MCMC ...  52%|██████████████████▎                |  ETA: 0:00:22[Krunning MCMC ...  52%|██████████████████▍                |  ETA: 0:00:22[Krunning MCMC ...  53%|██████████████████▌                |  ETA: 0:00:22[Krunning MCMC ...  53%|██████████████████▌                |  ETA: 0:00:22[Krunning MCMC ...  53%|██████████████████▋                |  ETA: 0:00:22[Krunning MCMC ...  54%|██████████████████▊                |  ETA: 0:00:22[Krunning MCMC ...  54%|██████████████████▉                |  ETA: 0:00:22[Krunning MCMC ...  54%|██████████████████▉                |  ETA: 0:00:21[Krunning MCMC ...  54%|███████████████████                |  ETA: 0:00:21[Krunning MCMC ...  55%|███████████████████▏               |  ETA: 0:00:21[Krunning MCMC ...  55%|███████████████████▍               |  ETA: 0:00:21[Krunning MCMC ...  55%|███████████████████▍               |  ETA: 0:00:21[Krunning MCMC ...  56%|███████████████████▌               |  ETA: 0:00:21[Krunning MCMC ...  56%|███████████████████▋               |  ETA: 0:00:21[Krunning MCMC ...  56%|███████████████████▊               |  ETA: 0:00:20[Krunning MCMC ...  57%|███████████████████▊               |  ETA: 0:00:20[Krunning MCMC ...  57%|████████████████████               |  ETA: 0:00:20[Krunning MCMC ...  57%|████████████████████▏              |  ETA: 0:00:20[Krunning MCMC ...  58%|████████████████████▎              |  ETA: 0:00:20[Krunning MCMC ...  58%|████████████████████▍              |  ETA: 0:00:19[Krunning MCMC ...  58%|████████████████████▌              |  ETA: 0:00:19[Krunning MCMC ...  59%|████████████████████▌              |  ETA: 0:00:19[Krunning MCMC ...  59%|████████████████████▋              |  ETA: 0:00:19[Krunning MCMC ...  59%|████████████████████▊              |  ETA: 0:00:19[Krunning MCMC ...  60%|████████████████████▉              |  ETA: 0:00:19[Krunning MCMC ...  60%|█████████████████████              |  ETA: 0:00:18[Krunning MCMC ...  60%|█████████████████████▏             |  ETA: 0:00:18[Krunning MCMC ...  61%|█████████████████████▎             |  ETA: 0:00:18[Krunning MCMC ...  61%|█████████████████████▍             |  ETA: 0:00:18[Krunning MCMC ...  61%|█████████████████████▌             |  ETA: 0:00:18[Krunning MCMC ...  62%|█████████████████████▋             |  ETA: 0:00:18[Krunning MCMC ...  62%|█████████████████████▊             |  ETA: 0:00:17[Krunning MCMC ...  62%|█████████████████████▉             |  ETA: 0:00:17[Krunning MCMC ...  63%|██████████████████████             |  ETA: 0:00:17[Krunning MCMC ...  63%|██████████████████████▏            |  ETA: 0:00:17[Krunning MCMC ...  64%|██████████████████████▎            |  ETA: 0:00:17[Krunning MCMC ...  64%|██████████████████████▍            |  ETA: 0:00:16[Krunning MCMC ...  64%|██████████████████████▌            |  ETA: 0:00:16[Krunning MCMC ...  65%|██████████████████████▋            |  ETA: 0:00:16[Krunning MCMC ...  65%|██████████████████████▊            |  ETA: 0:00:16[Krunning MCMC ...  65%|██████████████████████▉            |  ETA: 0:00:16[Krunning MCMC ...  66%|███████████████████████            |  ETA: 0:00:16[Krunning MCMC ...  66%|███████████████████████▏           |  ETA: 0:00:15[Krunning MCMC ...  66%|███████████████████████▎           |  ETA: 0:00:15[Krunning MCMC ...  67%|███████████████████████▍           |  ETA: 0:00:15[Krunning MCMC ...  67%|███████████████████████▌           |  ETA: 0:00:15[Krunning MCMC ...  68%|███████████████████████▋           |  ETA: 0:00:15[Krunning MCMC ...  68%|███████████████████████▊           |  ETA: 0:00:15[Krunning MCMC ...  68%|███████████████████████▊           |  ETA: 0:00:14[Krunning MCMC ...  68%|███████████████████████▉           |  ETA: 0:00:14[Krunning MCMC ...  69%|████████████████████████           |  ETA: 0:00:14[Krunning MCMC ...  69%|████████████████████████▏          |  ETA: 0:00:14[Krunning MCMC ...  69%|████████████████████████▎          |  ETA: 0:00:14[Krunning MCMC ...  70%|████████████████████████▍          |  ETA: 0:00:14[Krunning MCMC ...  70%|████████████████████████▍          |  ETA: 0:00:14[Krunning MCMC ...  70%|████████████████████████▌          |  ETA: 0:00:13[Krunning MCMC ...  70%|████████████████████████▋          |  ETA: 0:00:13[Krunning MCMC ...  71%|████████████████████████▊          |  ETA: 0:00:13[Krunning MCMC ...  71%|████████████████████████▉          |  ETA: 0:00:13[Krunning MCMC ...  71%|█████████████████████████          |  ETA: 0:00:13[Krunning MCMC ...  72%|█████████████████████████▏         |  ETA: 0:00:13[Krunning MCMC ...  72%|█████████████████████████▎         |  ETA: 0:00:12[Krunning MCMC ...  72%|█████████████████████████▎         |  ETA: 0:00:12[Krunning MCMC ...  73%|█████████████████████████▍         |  ETA: 0:00:12[Krunning MCMC ...  73%|█████████████████████████▌         |  ETA: 0:00:12[Krunning MCMC ...  73%|█████████████████████████▋         |  ETA: 0:00:12[Krunning MCMC ...  74%|█████████████████████████▊         |  ETA: 0:00:12[Krunning MCMC ...  74%|█████████████████████████▉         |  ETA: 0:00:12[Krunning MCMC ...  74%|█████████████████████████▉         |  ETA: 0:00:12[Krunning MCMC ...  74%|██████████████████████████         |  ETA: 0:00:11[Krunning MCMC ...  75%|██████████████████████████▏        |  ETA: 0:00:11[Krunning MCMC ...  75%|██████████████████████████▎        |  ETA: 0:00:11[Krunning MCMC ...  75%|██████████████████████████▎        |  ETA: 0:00:11[Krunning MCMC ...  75%|██████████████████████████▍        |  ETA: 0:00:11[Krunning MCMC ...  75%|██████████████████████████▍        |  ETA: 0:00:11[Krunning MCMC ...  76%|██████████████████████████▌        |  ETA: 0:00:11[Krunning MCMC ...  76%|██████████████████████████▌        |  ETA: 0:00:11[Krunning MCMC ...  76%|██████████████████████████▋        |  ETA: 0:00:11[Krunning MCMC ...  76%|██████████████████████████▊        |  ETA: 0:00:11[Krunning MCMC ...  76%|██████████████████████████▊        |  ETA: 0:00:11[Krunning MCMC ...  77%|██████████████████████████▉        |  ETA: 0:00:11[Krunning MCMC ...  77%|██████████████████████████▉        |  ETA: 0:00:11[Krunning MCMC ...  77%|███████████████████████████        |  ETA: 0:00:10[Krunning MCMC ...  77%|███████████████████████████        |  ETA: 0:00:10[Krunning MCMC ...  78%|███████████████████████████▏       |  ETA: 0:00:10[Krunning MCMC ...  78%|███████████████████████████▎       |  ETA: 0:00:10[Krunning MCMC ...  78%|███████████████████████████▎       |  ETA: 0:00:10[Krunning MCMC ...  78%|███████████████████████████▍       |  ETA: 0:00:10[Krunning MCMC ...  78%|███████████████████████████▌       |  ETA: 0:00:10[Krunning MCMC ...  79%|███████████████████████████▌       |  ETA: 0:00:10[Krunning MCMC ...  79%|███████████████████████████▋       |  ETA: 0:00:10[Krunning MCMC ...  79%|███████████████████████████▋       |  ETA: 0:00:10[Krunning MCMC ...  79%|███████████████████████████▊       |  ETA: 0:00:09[Krunning MCMC ...  80%|███████████████████████████▉       |  ETA: 0:00:09[Krunning MCMC ...  80%|████████████████████████████       |  ETA: 0:00:09[Krunning MCMC ...  80%|████████████████████████████▏      |  ETA: 0:00:09[Krunning MCMC ...  81%|████████████████████████████▎      |  ETA: 0:00:09[Krunning MCMC ...  81%|████████████████████████████▍      |  ETA: 0:00:09[Krunning MCMC ...  82%|████████████████████████████▌      |  ETA: 0:00:08[Krunning MCMC ...  82%|████████████████████████████▋      |  ETA: 0:00:08[Krunning MCMC ...  82%|████████████████████████████▊      |  ETA: 0:00:08[Krunning MCMC ...  82%|████████████████████████████▉      |  ETA: 0:00:08[Krunning MCMC ...  83%|█████████████████████████████      |  ETA: 0:00:08[Krunning MCMC ...  83%|█████████████████████████████▏     |  ETA: 0:00:08[Krunning MCMC ...  83%|█████████████████████████████▎     |  ETA: 0:00:08[Krunning MCMC ...  84%|█████████████████████████████▍     |  ETA: 0:00:07[Krunning MCMC ...  84%|█████████████████████████████▍     |  ETA: 0:00:07[Krunning MCMC ...  84%|█████████████████████████████▋     |  ETA: 0:00:07[Krunning MCMC ...  85%|█████████████████████████████▋     |  ETA: 0:00:07[Krunning MCMC ...  85%|█████████████████████████████▊     |  ETA: 0:00:07[Krunning MCMC ...  85%|█████████████████████████████▉     |  ETA: 0:00:07[Krunning MCMC ...  86%|██████████████████████████████     |  ETA: 0:00:07[Krunning MCMC ...  86%|██████████████████████████████▏    |  ETA: 0:00:06[Krunning MCMC ...  86%|██████████████████████████████▎    |  ETA: 0:00:06[Krunning MCMC ...  87%|██████████████████████████████▍    |  ETA: 0:00:06[Krunning MCMC ...  87%|██████████████████████████████▌    |  ETA: 0:00:06[Krunning MCMC ...  87%|██████████████████████████████▌    |  ETA: 0:00:06[Krunning MCMC ...  88%|██████████████████████████████▋    |  ETA: 0:00:06[Krunning MCMC ...  88%|██████████████████████████████▊    |  ETA: 0:00:05[Krunning MCMC ...  88%|██████████████████████████████▉    |  ETA: 0:00:05[Krunning MCMC ...  88%|███████████████████████████████    |  ETA: 0:00:05[Krunning MCMC ...  89%|███████████████████████████████    |  ETA: 0:00:05[Krunning MCMC ...  89%|███████████████████████████████▏   |  ETA: 0:00:05[Krunning MCMC ...  89%|███████████████████████████████▎   |  ETA: 0:00:05[Krunning MCMC ...  90%|███████████████████████████████▍   |  ETA: 0:00:05[Krunning MCMC ...  90%|███████████████████████████████▍   |  ETA: 0:00:05[Krunning MCMC ...  90%|███████████████████████████████▋   |  ETA: 0:00:04[Krunning MCMC ...  91%|███████████████████████████████▊   |  ETA: 0:00:04[Krunning MCMC ...  91%|███████████████████████████████▉   |  ETA: 0:00:04[Krunning MCMC ...  91%|████████████████████████████████   |  ETA: 0:00:04[Krunning MCMC ...  92%|████████████████████████████████▏  |  ETA: 0:00:04[Krunning MCMC ...  92%|████████████████████████████████▎  |  ETA: 0:00:04[Krunning MCMC ...  92%|████████████████████████████████▍  |  ETA: 0:00:03[Krunning MCMC ...  93%|████████████████████████████████▌  |  ETA: 0:00:03[Krunning MCMC ...  93%|████████████████████████████████▌  |  ETA: 0:00:03[Krunning MCMC ...  93%|████████████████████████████████▋  |  ETA: 0:00:03[Krunning MCMC ...  94%|████████████████████████████████▊  |  ETA: 0:00:03[Krunning MCMC ...  94%|████████████████████████████████▉  |  ETA: 0:00:03[Krunning MCMC ...  94%|█████████████████████████████████▏ |  ETA: 0:00:02[Krunning MCMC ...  95%|█████████████████████████████████▏ |  ETA: 0:00:02[Krunning MCMC ...  95%|█████████████████████████████████▍ |  ETA: 0:00:02[Krunning MCMC ...  96%|█████████████████████████████████▌ |  ETA: 0:00:02[Krunning MCMC ...  96%|█████████████████████████████████▋ |  ETA: 0:00:02[Krunning MCMC ...  96%|█████████████████████████████████▊ |  ETA: 0:00:02[Krunning MCMC ...  97%|█████████████████████████████████▉ |  ETA: 0:00:01[Krunning MCMC ...  97%|██████████████████████████████████ |  ETA: 0:00:01[Krunning MCMC ...  98%|██████████████████████████████████▏|  ETA: 0:00:01[Krunning MCMC ...  98%|██████████████████████████████████▎|  ETA: 0:00:01[Krunning MCMC ...  98%|██████████████████████████████████▍|  ETA: 0:00:01[Krunning MCMC ...  98%|██████████████████████████████████▌|  ETA: 0:00:01[Krunning MCMC ...  99%|██████████████████████████████████▋|  ETA: 0:00:00[Krunning MCMC ...  99%|██████████████████████████████████▊|  ETA: 0:00:00[Krunning MCMC ...  99%|██████████████████████████████████▉|  ETA: 0:00:00[Krunning MCMC ... 100%|███████████████████████████████████| Time: 0:00:44[K
-"N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "N", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "N", "N", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "N", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "N", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "N", "N", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "Y", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "Y", "Y", "Y", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "N", "N", "Y"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "Y", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "N", "Y", "Y", "N", "N", "N", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "N", "N", "N", "N", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "N", "Y", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "N", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "N", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "Y", "Y", "Y", "Y"]                 0.0
-["N", "Y", "N", "Y", "N", "Y", "N", "Y", "N", "N"]                 0.0
-["N", "N", "Y", "Y", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "N", "Y", "N"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N"]                 0.0
-["N", "Y", "N", "N", "Y", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "Y", "Y", "Y", "N"]                 0.0
-["Y", "N", "Y", "Y", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "Y", "Y", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "N", "Y", "Y"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "N", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "N", "N", "Y"]                 0.0
-["N", "Y", "N", "N", "Y", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "Y", "N", "N", "Y", "N", "N", "Y", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "N", "N", "Y"]                 0.0
-["Y", "Y", "Y", "N", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "N", "Y", "Y"]                 0.0
-["N", "N", "N", "N", "N", "N", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "N", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "N", "N", "N"]                 0.0
-["N", "Y", "Y", "N", "Y", "Y", "Y", "Y", "N", "N"]                 0.0
-["Y", "Y", "N", "Y", "Y", "Y", "N", "Y", "N", "Y"]                 0.0
-["N", "Y", "N", "Y", "Y", "Y", "N", "Y", "Y", "N"]                 0.0
-["N", "Y", "Y", "Y", "N", "N", "Y", "Y", "N", "Y"]                 0.0
-["Y", "N", "N", "N", "Y", "Y", "N", "N", "N", "N"]                 0.0
-["N", "N", "Y", "N", "N", "N", "Y", "N", "N", "N"]                 0.0
-["Y", "Y", "Y", "Y", "N", "Y", "N", "N", "Y", "N"]                 0.0
-["Y", "Y", "Y", "N", "N", "N", "N", "Y", "Y", "N"]                 0.0
-["Y", "N", "N", "Y", "N", "N", "N", "N", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "N", "N", "N", "Y", "N"]                 0.0
-["N", "N", "Y", "N", "N", "Y", "Y", "Y", "N", "Y"]                 0.0
-["N", "N", "N", "Y", "N", "Y", "N", "Y", "Y", "Y"]                 0.0
-["Y", "N", "N", "Y", "Y", "N", "Y", "Y", "Y", "Y"]                 0.0
-["Y", "Y", "N", "Y", "Y", "N", "N", "Y", "N", "N"]                 0.0
-
-estimatePi                                     true
-estimate_scale                                false
-
-Degree of freedom for hyper-parameters:
-
-residual variances:                           4.000
-marker effect variances:                      4.000
-
-
-
-Describe layer 2->3: 
-
-A Linear Mixed Model was build using model equations:
-
-trait1=intercept + omics
-
-Model Information:
-
-Term            C/F          F/R            nLevels
-intercept       factor       fixed                1
-
-MCMC Information:
-
-chain_length                                   1000
-burnin                                          200
-starting_value                                 true
-printout_frequency                             1001
-output_samples_frequency                          1
-constraint on residual variance                true
-constraint on marker effect variance for omics  true
-missing_phenotypes                             true
-update_priors_frequency                           0
-seed                                          false
-
-Hyper-parameters Information:
-
-residual variances:                           0.985
-
-Genomic Information:
-
-complete genomic data (i.e., non-single-step analysis)
-
-Genomic Category                              omics
-Method                                       BayesC
-genetic variances (genomic):                  0.985
-marker effect variances:                      0.099
-π                                               0.0
-estimatePi                                     true
-estimate_scale                                false
-
-Degree of freedom for hyper-parameters:
-
-residual variances:                           4.000
-marker effect variances:                      4.000
-
-
-
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_residual_variance.txt is created to save MCMC samples for residual_variance.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic1.txt is created to save MCMC samples for marker_effects_geno_omic1.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic2.txt is created to save MCMC samples for marker_effects_geno_omic2.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic3.txt is created to save MCMC samples for marker_effects_geno_omic3.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic4.txt is created to save MCMC samples for marker_effects_geno_omic4.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic5.txt is created to save MCMC samples for marker_effects_geno_omic5.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic6.txt is created to save MCMC samples for marker_effects_geno_omic6.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic7.txt is created to save MCMC samples for marker_effects_geno_omic7.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic8.txt is created to save MCMC samples for marker_effects_geno_omic8.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic9.txt is created to save MCMC samples for marker_effects_geno_omic9.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_geno_omic10.txt is created to save MCMC samples for marker_effects_geno_omic10.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_marker_effects_variances_geno.txt is created to save MCMC samples for marker_effects_variances_geno.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_pi_geno.txt is created to save MCMC samples for pi_geno.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic1.txt is created to save MCMC samples for EBV_omic1.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic2.txt is created to save MCMC samples for EBV_omic2.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic3.txt is created to save MCMC samples for EBV_omic3.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic4.txt is created to save MCMC samples for EBV_omic4.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic5.txt is created to save MCMC samples for EBV_omic5.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic6.txt is created to save MCMC samples for EBV_omic6.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic7.txt is created to save MCMC samples for EBV_omic7.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic8.txt is created to save MCMC samples for EBV_omic8.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic9.txt is created to save MCMC samples for EBV_omic9.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_omic10.txt is created to save MCMC samples for EBV_omic10.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_genetic_variance.txt is created to save MCMC samples for genetic_variance.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_heritability.txt is created to save MCMC samples for heritability.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_EBV_NonLinear.txt is created to save MCMC samples for EBV_NonLinear.
-The file /var/folders/cb/s6kfhy213wsfg95kzksfkjdm0000gn/T/jl_Il0QOd/output/MCMC_samples_neural_networks_bias_and_weights.txt is created to save MCMC samples for neural_networks_bias_and_weights.
-
-======================================================================
-BENCHMARK RESULTS FOR PYNNMM COMPARISON
-======================================================================
-
-Configuration:
-  Seed: 42
-  Chain length: 1000
-  Burnin: 200
-  Method: BayesC (both layers)
-  Activation: linear
-
-Dataset (simulated_omics_data):
-  Individuals: 3534
-  SNPs: 1000 (927 after MAF filtering)
-  Omics: 10
-  Target heritability: 0.5 (20% direct, 80% indirect)
-
-ACCURACY METRICS (TARGET VALUES FOR PYNNMM):
-  ┌────────────────────────────────────────┐
-  │ cor(EBV, genetic_total):    0.8555  │
-  │ cor(EBV, genetic_direct):   0.0404  │
-  │ cor(EBV, genetic_indirect): 0.9364  │
-  └────────────────────────────────────────┘
-
-EBV Statistics:
-  Mean: -0.0
-  Std:  358.2618
-
-======================================================================
-
-Expected PyNNMM accuracy should be within ±0.05 of these values
-with the same configuration and random seed.
-

@@ -439,7 +439,11 @@ function runNNMM(layers, equations;
     #print nn activation function / user-defined function
     if is_nn_activation_fcn  #nn activation function such as tanh, sigmoid
         printstyled(" - Activation function in 2nd layer: $(equations[2].activation_function).\n",bold=false,color=:green)
-        printstyled(" - Sample missing data in 2nd layer: Hamiltonian Monte Carlo. \n",bold=false,color=:green)
+        if equations[2].activation_function == "linear"
+            printstyled(" - Sample missing data in 2nd layer: Conjugate Gaussian (linear activation). \n",bold=false,color=:green)
+        else
+            printstyled(" - Sample missing data in 2nd layer: Hamiltonian Monte Carlo. \n",bold=false,color=:green)
+        end
     elseif !is_nn_activation_fcn #user-defined function. e.g, Pig_Growth_Model(o1, o2, o3)
         printstyled(" - Nonlinear function in 2nd layer:  user-defined nonlinear_function for the relationship between middle layer and output layer is used.\n",bold=false,color=:green)
         printstyled(" - Sample missing data in 2nd layer: Matropolis-Hastings.\n",bold=false,color=:green)

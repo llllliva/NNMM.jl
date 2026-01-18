@@ -59,7 +59,11 @@ function nnbayes_check_print_parameter(model_equations,num_hidden_nodes,nonlinea
 
     if is_activation_fcn==true  #NN with activation function
         printstyled(" - Nonlinear function:     $nonlinear_function.\n",bold=false,color=:green)
-        printstyled(" - Sampler:                Hamiltonian Monte Carlo. \n",bold=false,color=:green)
+        if nonlinear_function == "linear"
+            printstyled(" - Sampler:                Conjugate Gaussian (linear activation). \n",bold=false,color=:green)
+        else
+            printstyled(" - Sampler:                Hamiltonian Monte Carlo. \n",bold=false,color=:green)
+        end
     elseif is_activation_fcn==false #user-defined nonlinear function. e.g, CropGrowthModel()
         printstyled(" - Nonlinear function:     user-defined nonlinear_function for the relationship between hidden nodes and observed trait is used.\n",bold=false,color=:green)
         printstyled(" - Sampler:                Matropolis-Hastings.\n",bold=false,color=:green)

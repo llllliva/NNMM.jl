@@ -124,17 +124,17 @@
 
 | Metric | Pearson | Spearman |
 |--------|---------|----------|
-| EBV (genetic) | 0.7647 | 0.7500 |
-| EPV (phenotypic) | 0.7284 | 0.7141 |
+| EBV (genetic) | 0.9616 | 0.9595 |
+| EPV (phenotypic) | 1.0000 | 1.0000 |
 
 ### Accuracy Comparison
 
 | Metric | NNMM.jl | PyNNMM | Gap |
 |--------|---------|--------|-----|
-| cor(EBV, genetic_total) | **0.8549** | 0.8059 | 0.0490 |
-| cor(EBV, genetic_direct) | 0.0399 | 0.4115 | -0.3716 |
-| cor(EBV, genetic_indirect) | **0.9358** | 0.6952 | 0.2406 |
-| cor(EPV, genetic_total) | **0.4996** | 0.3441 | 0.1555 |
+| cor(EBV, genetic_total) | **0.8571** | 0.8139 | 0.0432 |
+| cor(EBV, genetic_direct) | 0.0379 | 0.0305 | 0.0074 |
+| cor(EBV, genetic_indirect) | **0.9393** | 0.8947 | 0.0446 |
+| cor(EPV, genetic_total) | **0.4979** | 0.4978 | 0.0001 |
 
 ### Performance Comparison
 
@@ -178,7 +178,7 @@ julia --project=. benchmarks/save_ebv_for_comparison.jl
 
 3. **Missing Data Robustness**: EBV accuracy degrades gracefully with missing omics data (13.8% reduction at 50% missing), while EPV degrades more significantly (28.3%).
 
-4. **Cross-Package Agreement**: EBV correlation between NNMM.jl and PyNNMM is 0.76, indicating moderate agreement. The difference in cor(EBV, genetic_direct) suggests different parameterization strategies.
+4. **Cross-Package Agreement**: EPV is essentially identical (Pearson ≈ 1.00). EBV parity is strong (Pearson ≈ 0.96) but not identical; remaining differences likely come from MCMC trajectory/implementation details in the 1→2 layer.
 
 ---
 

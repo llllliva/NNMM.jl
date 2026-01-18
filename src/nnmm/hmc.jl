@@ -136,3 +136,78 @@ function hmc_one_iteration(nLeapfrog,ϵ,ylats_old,yobs,weights_NN,σ_ylats,σ_yo
 
     return ylats_new
 end
+
+"""
+    sample_latent_traits_linear_gaussian(μ_ylats, y_centered, weights_NN, σ_ylats, σ_yobs)
+
+Sample latent traits (omics) for a *linear* activation NNMM update in closed form.
+
+This avoids HMC instability in the linear/Gaussian case where the conditional distribution
+`p(z | y, ...)` is multivariate Normal.
+
+Inputs:
+- `μ_ylats`: `n×l` matrix of prior means for each individual (from the 1→2 model).
+- `y_centered`: length-`n` vector of `y - Xb` (2→3 non-marker effects removed).
+- `weights_NN`: length-`l` vector of omics→phenotype weights.
+- `σ_ylats`: latent-trait residual covariance (Number / `Diagonal` / `AbstractMatrix`).
+- `σ_yobs`: phenotype residual variance (scalar).
+
+Returns:
+- `n×l` matrix of sampled latent traits.
+"""
+function sample_latent_traits_linear_gaussian(μ_ylats, y_centered, weights_NN, σ_ylats, σ_yobs)
+    nobs, ntraits = size(μ_ylats)
+    if nobs == 0
+        return copy(μ_ylats)
+    end
+
+    T = eltype(μ_ylats)
+    w = T.(weights_NN)
+    y = T.(y_centered)
+
+    Σw = if σ_ylats isa Number
+        T(σ_ylats) .* w
+    else
+        σ_ylats * w
+    end
+
+    denom = float(σ_yobs) + float(dot(w, Σw))
+    if !isfinite(denom) || denom <= 0
+        error("NNMM: invalid denom for linear latent update: denom=$denom σ_yobs=$σ_yobs")
+    end
+
+    Σ = if σ_ylats isa Number
+        Matrix{T}(I, ntraits, ntraits) .* T(σ_ylats)
+    else
+        Matrix{T}(σ_ylats)
+    end
+
+    cov = Σ .- (Σw * Σw') ./ T(denom)
+    cov = Symmetric(cov)
+
+    # Cholesky can fail if `cov` is numerically near-singular; add a small jitter.
+    L = nothing
+    jitter = zero(T)
+    for attempt in 1:6
+        try
+            L = cholesky(cov + jitter * I).L
+            break
+        catch
+            jitter = attempt == 1 ? eps(T) : jitter * T(10)
+        end
+    end
+    if L === nothing
+        error("NNMM: failed to factor linear latent covariance matrix (cov not PD)")
+    end
+
+    μ_dot = μ_ylats * w
+    resid = y .- μ_dot
+    μ_post = μ_ylats .+ (resid ./ T(denom)) * Σw'
+
+    Z = randn(T, nobs, ntraits)
+    ylats_new = μ_post .+ Z * L'
+    if any(x -> !isfinite(x), ylats_new)
+        error("NNMM: non-finite draw in linear latent update")
+    end
+    return ylats_new
+end

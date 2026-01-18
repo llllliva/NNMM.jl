@@ -57,6 +57,10 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
     is_nnbayes_partial       = mme1.nonlinear_function != false && mme1.is_fully_connected==false
     is_activation_fcn        = mme1.is_activation_fcn
     nonlinear_function       = mme1.nonlinear_function
+    is_linear_activation     = false
+    if is_activation_fcn == true && nonlinear_function != false
+        is_linear_activation = occursin("mylinear", string(nameof(typeof(nonlinear_function))))
+    end
     causal_structure         = false
     debug_scale              = get(ENV, "NNMM_DEBUG_SCALE", "0") == "1"
     debug_scale_iters_str    = get(ENV, "NNMM_DEBUG_SCALE_ITERS", "5")
@@ -399,6 +403,12 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
         Z_yobs_from_omics = map(mme1.MCMCinfo.double_precision ? Float64 : Float32, Z_yobs_from_omics)
     end
 
+    Z_obs_from_layer2_omics = nothing
+    if Z_yobs_from_omics !== nothing && (mme1.obsID != mme2.M[1].obsID)
+        Z_obs_from_layer2_omics = mkmat_incidence_factor(mme1.obsID, mme2.M[1].obsID)
+        Z_obs_from_layer2_omics = map(mme1.MCMCinfo.double_precision ? Float64 : Float32, Z_obs_from_layer2_omics)
+    end
+
     Z_output_from_obs = nothing
     if mme1.output_ID != 0 && mme1.output_ID != mme1.obsID
         Z_output_from_obs = mkmat_incidence_factor(mme1.output_ID, mme1.obsID)
@@ -622,15 +632,36 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 
 	            if any(incomplete_with_yobs)
 	                if mme1.is_activation_fcn == true #Neural Network with activation function (incl. linear)
-	                    #step 1. sample latent traits for incomplete inds with observed yobs
-	                    ycorr2_sel = BitVector(Z_yobs_from_omics * incomplete_with_yobs)
-	                    ylats_new = hmc_one_iteration(10, 0.1,
-	                                                 ylats_old[incomplete_with_yobs, :],
-	                                                 yobs[incomplete_with_yobs],
-	                                                 mme1.weights_NN, mme1.R.val, σ2_yobs,
-                                                 ycorr_reshape[incomplete_with_yobs, :],
-                                                 nonlinear_function,
-                                                 ycorr2[ycorr2_sel])
+	                    # Step 1. sample latent traits for incomplete inds with observed yobs.
+	                    #
+	                    # Map ycorr2 (2->3 residuals, in mme2.obsID order) back to the
+	                    # full omics/individual order so it aligns with `ylats_old` and `yobs`.
+	                    ycorr_yobs_all = Z_yobs_from_omics' * ycorr2
+	                    if Z_obs_from_layer2_omics !== nothing
+	                        ycorr_yobs_all = Z_obs_from_layer2_omics * ycorr_yobs_all
+	                    end
+	                    ycorr_yobs = ycorr_yobs_all[incomplete_with_yobs]
+
+	                    if is_linear_activation
+	                        # Linear activation => closed-form Gaussian conditional; avoid HMC instability.
+	                        ylats_old_inc = ylats_old[incomplete_with_yobs, :]
+	                        y_centered = ycorr_yobs .+ (ylats_old_inc * mme1.weights_NN) # y - Xb
+	                        ylats_new = sample_latent_traits_linear_gaussian(
+	                            μ_ylats[incomplete_with_yobs, :],
+	                            y_centered,
+	                            mme1.weights_NN,
+	                            mme1.R.val,
+	                            σ2_yobs,
+	                        )
+	                    else
+	                        ylats_new = hmc_one_iteration(10, 0.1,
+	                                                     ylats_old[incomplete_with_yobs, :],
+	                                                     yobs[incomplete_with_yobs],
+	                                                     mme1.weights_NN, mme1.R.val, σ2_yobs,
+	                                                     ycorr_reshape[incomplete_with_yobs, :],
+	                                                     nonlinear_function,
+	                                                     ycorr_yobs)
+	                    end
                 else  # user-defined function, MH (phenotype likelihood only)
                     ylats_old_inc = ylats_old[incomplete_with_yobs, :]
                     μ_ylats_inc   = μ_ylats[incomplete_with_yobs, :]

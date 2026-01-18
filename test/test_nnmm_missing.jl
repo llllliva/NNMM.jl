@@ -127,6 +127,57 @@ using Random
         # EBV should be available for all individuals, including those with missing phenotypes
         @test nrow(result["EBV_NonLinear"]) > 3000
     end
+
+    @testset "All omics missing (linear) stays finite" begin
+        # Extreme corner case: all omics are missing for every individual, and some phenotypes are missing.
+        # This previously triggered NaNs via unstable latent-trait sampling in long runs.
+        omics_df = pheno_df[:, [:ID, :omic1, :omic2, :omic3]]
+        for col in [:omic1, :omic2, :omic3]
+            omics_df[!, col] = Vector{Union{Float64, Missing}}(omics_df[!, col])
+            omics_df[!, col] .= missing
+        end
+        o_path = joinpath(data_dir, "omics_all_missing.csv")
+        CSV.write(o_path, omics_df; missingstring="NA")
+
+        pheno_out_df = copy(pheno_df[:, [:ID, :trait1]])
+        allowmissing!(pheno_out_df, :trait1)
+        Random.seed!(789)
+        pheno_out_df[rand(1:nind, nind ÷ 5), :trait1] .= missing
+        y_path = joinpath(data_dir, "phenotypes_some_missing.csv")
+        CSV.write(y_path, pheno_out_df; missingstring="NA")
+
+        layers = [
+            Layer(layer_name="geno", data_path=[geno_path]),
+            Layer(layer_name="omics", data_path=o_path, missing_value="NA"),
+            Layer(layer_name="phenotypes", data_path=y_path, missing_value="NA")
+        ]
+
+        equations = [
+            Equation(
+                from_layer_name="geno",
+                to_layer_name="omics",
+                equation="omics = intercept + geno",
+                omics_name=["omic1", "omic2", "omic3"],
+                method="BayesC"
+            ),
+            Equation(
+                from_layer_name="omics",
+                to_layer_name="phenotypes",
+                equation="phenotypes = intercept + omics",
+                phenotype_name=["trait1"],
+                method="BayesC",
+                activation_function="linear",
+            )
+        ]
+
+        outdir = joinpath(data_dir, "nnmm_all_missing_out")
+        result = runNNMM(layers, equations; chain_length=10, burnin=0, printout_frequency=100, output_folder=outdir)
+
+        @test haskey(result, "EBV_NonLinear")
+        @test haskey(result, "EPV_Output_NonLinear")
+        @test all(isfinite, result["EBV_NonLinear"].EBV)
+        @test all(isfinite, result["EPV_Output_NonLinear"].EPV)
+    end
     
     # Cleanup
     rm(data_dir, recursive=true, force=true)

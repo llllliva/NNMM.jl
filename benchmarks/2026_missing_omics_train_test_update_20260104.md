@@ -100,3 +100,7 @@ This is **not** an “empty EPV” case, and it’s not just a “constant EPV�
 - After the collapse, **per-sample** EBV/EPV predictions for the test set become constant (all zeros), so **per-sample correlations** are undefined (`sd=0`). However, the **cumulative posterior mean** EBV can remain stable because correlation is scale-invariant and the chain’s early samples can dominate the running mean.
 
 I diagnosed this with a local debug run using `--keep-output=true` to inspect per-iteration sample files. The resulting `benchmarks/epv_nan_debug_*` output folders are intentionally not tracked because they can be hundreds of MB.
+
+## Update (2026-01-17): Fixed
+
+This NaN issue was caused by numerical instability in the latent-omics sampler under **linear activation** when *all* omics are missing. NNMM.jl now uses a **closed-form conjugate Gaussian** update for the linear-activation latent-omics step (instead of HMC), and rerunning `(train_missing_pct=1.0, test_missing_pct=1.0)` with `chain_length=1000, burnin=200` no longer produces `NaN` EPV(test,*) correlations.

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed Layer 2→3 MCMC incorrectly using partial-connected logic (`is_nnbayes_partial` branches)
+  - Layer 2→3 now correctly uses fully-connected path regardless of Layer 1→2 connectivity
+- Fixed output file handling for partial-connected networks
+  - EBV output now uses consistent trait names (`mme.lhsVec`) for both file creation and writing
+
+### Changed
+- Refactored `wArray2` to always be initialized (consistent with `wArray1` in Layer 1→2)
+  - `wArray2[1]` is now used for single-trait Layer 3 (equivalent to `ycorr2`)
+  - Prepares codebase for future multi-trait Layer 3 support
+
 ## [0.1.0] - 2026-01-18
 
 ### Added
@@ -22,7 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Estimated Breeding Values (EBV) output
 
 ### Known Limitations
-- Partial-connected networks have a bug (`wArray2` undefined) - use fully-connected as workaround
 - User-defined activation functions not yet supported (use built-in functions)
 - Multi-trait phenotypes in Layer 3 not yet supported
 - GBLUP not supported for Layer 2→3 equations

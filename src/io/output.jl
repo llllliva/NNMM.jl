@@ -535,7 +535,7 @@ function output_MCMC_samples(mme,vRes,G0,
          writedlm(outfile["EBV_"*string(mme.lhsVec[1])],myEBV',',')
          for traiti in 2:ntraits
              myEBV = getEBV(mme,traiti) #actually BV
-             trait_name = is_partial_connect ? mme.M[traiti].trait_names[1] : string(mme.lhsVec[traiti])
+             trait_name = string(mme.lhsVec[traiti])  # Always use lhsVec to match file creation
              writedlm(outfile["EBV_"*trait_name],myEBV',',')
              EBVmat = [EBVmat myEBV]
          end

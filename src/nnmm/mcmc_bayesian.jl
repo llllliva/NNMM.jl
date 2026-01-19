@@ -353,17 +353,18 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
     end
 
     ############################################################################
-    #More on Multi-Trait
+    # Initialize wArray2 (always, for both single-trait and multi-trait)
+    # wArray2[i] is a view into ycorr2 for trait i
+    # For single-trait: wArray2[1] ≡ ycorr2
     ############################################################################
-    if is_multi_trait2
-        error("MT 2->3 is not supported for now")
-        wArray2 = Array{Union{Array{Float64,1},Array{Float32,1}}}(undef,mme2.nModels)
-        for traiti = 1:mme2.nModels
-            startPosi             = (traiti-1)*length(mme2.obsID)  + 1
-            ptr                   = pointer(ycorr2,startPosi)
-            wArray2[traiti]        = unsafe_wrap(Array,ptr,length(mme2.obsID))
-        end
+    wArray2 = Array{Union{Array{Float64,1},Array{Float32,1}}}(undef,mme2.nModels)
+    for traiti = 1:mme2.nModels
+        startPosi             = (traiti-1)*length(mme2.obsID)  + 1
+        ptr                   = pointer(ycorr2,startPosi)
+        wArray2[traiti]        = unsafe_wrap(Array,ptr,length(mme2.obsID))
+    end
 
+    if is_multi_trait2
         #Starting value for Ri is made based on missing value pattern
         #(imputed phenotypes will not used to compute first mmeRhs)
         Ri         = mkRi(mme2,df2,invweights2)
@@ -808,53 +809,45 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                 ########################################################################
                 if Mi.method in ["BayesC","BayesB","BayesA"]
                     locus_effect_variances = (Mi.method == "BayesC" ? fill(Mi.G.val,Mi.nFeatures) : Mi.G.val)
-	                    if is_multi_trait2 && !is_nnbayes_partial
+	                    if is_multi_trait2
 	                        if Mi.G.constraint==true
 	                            megaBayesABC!(Mi, wArray2, mme2.R.val, locus_effect_variances; rngs=thread_rngs)
 	                        else
 	                            MTBayesABC!(Mi,wArray2,mme2.R.val,locus_effect_variances,mme2.nModels)
 	                        end
-                    elseif is_nnbayes_partial
-                        BayesABC!(Mi,wArray2[i],mme2.R.val[i,i],locus_effect_variances) #this can be parallelized (conflict with others)
                     else
-                        BayesABC!(Mi,ycorr2,mme2.R.val,locus_effect_variances)
+                        BayesABC!(Mi,wArray2[1],mme2.R.val,locus_effect_variances)
                     end
                 elseif Mi.method =="RR-BLUP"
-	                    if is_multi_trait2 && !is_nnbayes_partial
+	                    if is_multi_trait2
 	                        if Mi.G.constraint==true
 	                            megaBayesC0!(Mi, wArray2, mme2.R.val; rngs=thread_rngs)
 	                        else
 	                            MTBayesC0!(Mi,wArray2,mme2.R.val)
 	                        end
-                    elseif is_nnbayes_partial
-                        BayesC0!(Mi,wArray2[i],mme2.R.val[i,i])
                     else
-                        BayesC0!(Mi,ycorr2,mme2.R.val)
+                        BayesC0!(Mi,wArray2[1],mme2.R.val)
                     end
                 elseif Mi.method == "BayesL"
-	                    if is_multi_trait2 && !is_nnbayes_partial
+	                    if is_multi_trait2
 	                        #problem with sampleGammaArray
 	                        if Mi.G.constraint==true
 	                            megaBayesL!(Mi, wArray2, mme2.R.val; rngs=thread_rngs)
 	                        else
 	                            MTBayesL!(Mi,wArray2,mme2.R.val)
 	                        end
-                    elseif is_nnbayes_partial
-                        BayesC0!(Mi,wArray2[i],mme2.R.val[i,i])
                     else
-                        BayesL!(Mi,ycorr2,mme2.R.val)
+                        BayesL!(Mi,wArray2[1],mme2.R.val)
                     end
                 elseif Mi.method == "GBLUP"
-	                    if is_multi_trait2 && !is_nnbayes_partial
+	                    if is_multi_trait2
 	                        if Mi.G.constraint==true
 	                            megaGBLUP!(Mi, wArray2, mme2.R.val, invweights2; rngs=thread_rngs)
 	                        else
 	                            MTGBLUP!(Mi,wArray2,ycorr2,mme2.R.val,invweights2)
 	                        end
-                    elseif is_nnbayes_partial
-                        GBLUP!(Mi,wArray2[i],mme2.R.val[i,i],invweights2)
                     else
-                        GBLUP!(Mi,ycorr2,mme2.R.val,invweights2)
+                        GBLUP!(Mi,wArray2[1],mme2.R.val,invweights2)
                     end
                 end
                 if debug_scale && iter <= debug_scale_iters
@@ -869,7 +862,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                 # Marker Inclusion Probability
                 ########################################################################
                 if Mi.estimatePi == true
-                    if is_multi_trait2 && !is_nnbayes_partial
+                    if is_multi_trait2
                         if Mi.G.constraint==true
                             Mi.π = [samplePi(sum(Mi.δ[i]), Mi.nFeatures) for i in 1:mme2.nModels]
                         else

@@ -18,34 +18,33 @@
 
 ---
 
-## Full Omics Benchmark (`benchmark_accuracy.jl`)
+## Full Omics Benchmark (`benchmarks/scripts/benchmark_accuracy.jl`)
 
 ### EBV Accuracy Metrics (Estimated Breeding Value - from predicted omics)
 
 | Metric | Value |
 |--------|-------|
-| cor(EBV, genetic_total) | **0.8549** |
-| cor(EBV, genetic_direct) | 0.0399 |
-| cor(EBV, genetic_indirect) | 0.9358 |
+| cor(EBV, genetic_total) | **0.8571** |
+| cor(EBV, genetic_direct) | 0.0379 |
+| cor(EBV, genetic_indirect) | 0.9393 |
 
 ### EPV Accuracy Metrics (Estimated Phenotypic Value - from observed omics)
 
 | Metric | Value |
 |--------|-------|
-| cor(EPV, genetic_total) | 0.4996 |
-| cor(EPV, genetic_direct) | 0.0144 |
-| cor(EPV, genetic_indirect) | 0.5513 |
-| cor(EPV, trait1) | **0.8254** |
+| cor(EPV, genetic_total) | 0.4979 |
+| cor(EPV, genetic_direct) | 0.0136 |
+| cor(EPV, genetic_indirect) | 0.5498 |
+| cor(EPV, trait1) | **0.8269** |
 
 ### EBV/EPV Statistics
 
 | Statistic | EBV | EPV |
 |-----------|-----|-----|
-| Mean | -0.0 | 2.31 |
-| Std | 358.7 | 691.1 |
+| Mean | -0.0 | 0.0031 |
+| Std | 0.5979 | 1.1597 |
 
-> **Note on Scale**: The large EBV/EPV std is due to weight drift in the Layer 2 (omics → phenotype) sampler. 
-> This affects absolute scale but NOT rankings (correlation with true values is preserved).
+> **Note on Scale**: These are **post‑fix** scales (the earlier “large SD” issue was due to a `ycorr2` residual bug; see `benchmarks/reports/2026_benchmark_update_20260104.md`).
 
 ---
 
@@ -55,7 +54,7 @@
 
 | Missing % | Missing Cells | cor(EBV, total) | cor(EBV, direct) | cor(EBV, indirect) |
 |-----------|---------------|-----------------|------------------|---------------------|
-| 0% | 0 | **0.8549** | 0.0399 | 0.9358 |
+| 0% | 0 | **0.8571** | 0.0379 | 0.9393 |
 | 30% | 10,600 | **0.7873** | 0.0685 | 0.8460 |
 | 50% | 17,670 | **0.7365** | 0.1497 | 0.7486 |
 
@@ -63,7 +62,7 @@
 
 | Missing % | cor(EPV, total) | cor(EPV, direct) | cor(EPV, indirect) | cor(EPV, trait) |
 |-----------|-----------------|------------------|---------------------|-----------------|
-| 0% | 0.4996 | 0.0144 | 0.5513 | 0.8254 |
+| 0% | 0.4979 | 0.0136 | 0.5498 | 0.8269 |
 | 30% | 0.4067 | 0.0384 | 0.4355 | 0.6682 |
 | 50% | 0.3583 | 0.0788 | 0.3612 | 0.6118 |
 
@@ -124,16 +123,16 @@
 
 | Metric | Pearson | Spearman |
 |--------|---------|----------|
-| EBV (genetic) | 0.9616 | 0.9595 |
+| EBV (genetic) | 0.9997 | 0.9996 |
 | EPV (phenotypic) | 1.0000 | 1.0000 |
 
 ### Accuracy Comparison
 
-| Metric | NNMM.jl | PyNNMM | Gap |
+| Metric | NNMM.jl | PyNNMM | NNMM - Py |
 |--------|---------|--------|-----|
-| cor(EBV, genetic_total) | **0.8571** | 0.8139 | 0.0432 |
-| cor(EBV, genetic_direct) | 0.0379 | 0.0305 | 0.0074 |
-| cor(EBV, genetic_indirect) | **0.9393** | 0.8947 | 0.0446 |
+| cor(EBV, genetic_total) | **0.8571** | 0.8578 | -0.0007 |
+| cor(EBV, genetic_direct) | 0.0379 | 0.0392 | -0.0013 |
+| cor(EBV, genetic_indirect) | **0.9393** | 0.9395 | -0.0002 |
 | cor(EPV, genetic_total) | **0.4979** | 0.4978 | 0.0001 |
 
 ### Performance Comparison
@@ -153,19 +152,19 @@
 
 ```bash
 # Full omics benchmark
-julia --project=. benchmarks/benchmark_accuracy.jl
+julia --project=. benchmarks/scripts/benchmark_accuracy.jl
 
 # Missing omics benchmark
-julia --project=. benchmarks/benchmark_missing_omics.jl
+julia --project=. benchmarks/scripts/benchmark_missing_omics.jl
 
 # Convergence check (multiple seeds)
-julia --project=. benchmarks/check_convergence_seeds.jl
+julia --project=. benchmarks/scripts/check_convergence_seeds.jl
 
 # Performance benchmark
-julia --project=. benchmarks/benchmark_performance.jl
+julia --project=. benchmarks/scripts/benchmark_performance.jl
 
 # Save EBVs for cross-package comparison
-julia --project=. benchmarks/save_ebv_for_comparison.jl
+julia --project=. benchmarks/scripts/save_ebv_for_comparison.jl
 ```
 
 ---
@@ -178,25 +177,13 @@ julia --project=. benchmarks/save_ebv_for_comparison.jl
 
 3. **Missing Data Robustness**: EBV accuracy degrades gracefully with missing omics data (13.8% reduction at 50% missing), while EPV degrades more significantly (28.3%).
 
-4. **Cross-Package Agreement**: EPV is essentially identical (Pearson ≈ 1.00). EBV parity is strong (Pearson ≈ 0.96) but not identical; remaining differences likely come from MCMC trajectory/implementation details in the 1→2 layer.
+4. **Cross-Package Agreement**: EPV is essentially identical (Pearson ≈ 1.00) and EBV now also matches (Pearson ≈ 0.9997).
 
 ---
 
 ## Known Issues
 
-### Layer 2 Weight Drift (EBV Scale Inflation)
-
-**Issue**: The EBV_NonLinear/EPV_NonLinear scale grows significantly larger than the phenotype scale.
-
-**Impact**:
-- Absolute values are inflated
-- Rankings and correlations with true values are PRESERVED
-- Cross-package comparison requires standardization (Z-scores)
-
-**Workarounds**:
-1. Use standardized values (Z-scores) for interpretation
-2. Compare rankings/correlations rather than absolute values
-3. Use Spearman correlation for cross-package comparison
+- **Extreme missingness**: In the “missing omics train/test” benchmark, `EPV(test,*)` can become `NaN` only in the extreme case where *all* omics are missing in both train and test (`train_missing_pct=1.0`, `test_missing_pct=1.0`).
 
 ---
 

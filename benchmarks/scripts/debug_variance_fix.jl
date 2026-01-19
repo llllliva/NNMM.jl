@@ -63,7 +63,7 @@ equations_original = [
         from_layer_name="geno",
         to_layer_name="omics",
         equation="omics = intercept + geno",
-        omics_name=["omic$i" for i in 1:10],
+        traits=["omic$i" for i in 1:10],
         method="BayesC",
         estimatePi=true
     ),
@@ -71,7 +71,7 @@ equations_original = [
         from_layer_name="omics",
         to_layer_name="phenotypes",
         equation="phenotypes = intercept + omics",
-        phenotype_name=["trait1"],
+        traits=["trait1"],
         method="BayesC",
         activation_function="linear",
         estimate_variance_G=true  # DEFAULT - variance can drift
@@ -108,7 +108,7 @@ equations_fixed = [
         from_layer_name="geno",
         to_layer_name="omics",
         equation="omics = intercept + geno",
-        omics_name=["omic$i" for i in 1:10],
+        traits=["omic$i" for i in 1:10],
         method="BayesC",
         estimatePi=true
     ),
@@ -116,7 +116,7 @@ equations_fixed = [
         from_layer_name="omics",
         to_layer_name="phenotypes",
         equation="phenotypes = intercept + omics",
-        phenotype_name=["trait1"],
+        traits=["trait1"],
         method="BayesC",
         activation_function="linear",
         estimate_variance_G=false  # FIX - keep variance fixed
@@ -153,7 +153,7 @@ equations_stronger_prior = [
         from_layer_name="geno",
         to_layer_name="omics",
         equation="omics = intercept + geno",
-        omics_name=["omic$i" for i in 1:10],
+        traits=["omic$i" for i in 1:10],
         method="BayesC",
         estimatePi=true
     ),
@@ -161,7 +161,7 @@ equations_stronger_prior = [
         from_layer_name="omics",
         to_layer_name="phenotypes",
         equation="phenotypes = intercept + omics",
-        phenotype_name=["trait1"],
+        traits=["trait1"],
         method="BayesC",
         activation_function="linear",
         df_G=10.0  # Stronger prior (default is 4.0)

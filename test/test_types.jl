@@ -34,7 +34,7 @@ using NNMM
             from_layer_name="geno",
             to_layer_name="omics",
             equation="omics = intercept + geno",
-            omics_name=["o1", "o2"]
+            traits=["o1", "o2"]
         )
         @test eq.from_layer_name == "geno"
         @test eq.to_layer_name == "omics"

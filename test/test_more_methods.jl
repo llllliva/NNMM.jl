@@ -33,7 +33,7 @@ using CSV
                 from_layer_name="geno",
                 to_layer_name="omics",
                 equation="omics = intercept + geno",
-                omics_name=["omic1", "omic2"],
+                traits=["omic1", "omic2"],
                 method="BayesB",
                 estimatePi=true
             ),
@@ -41,7 +41,7 @@ using CSV
                 from_layer_name="omics",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + omics",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 method="BayesB",
                 estimatePi=true
             )
@@ -68,14 +68,14 @@ using CSV
                 from_layer_name="geno",
                 to_layer_name="omics",
                 equation="omics = intercept + geno",
-                omics_name=["omic1", "omic2"],
+                traits=["omic1", "omic2"],
                 method="BayesL"
             ),
             Equation(
                 from_layer_name="omics",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + omics",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 method="BayesL"
             )
         ]
@@ -101,14 +101,14 @@ using CSV
                 from_layer_name="geno",
                 to_layer_name="omics",
                 equation="omics = intercept + geno",
-                omics_name=["omic1", "omic2"],
+                traits=["omic1", "omic2"],
                 method="RR-BLUP"
             ),
             Equation(
                 from_layer_name="omics",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + omics",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 method="RR-BLUP"
             )
         ]
@@ -158,14 +158,14 @@ end
                 from_layer_name="geno",
                 to_layer_name="omics",
                 equation="omics = intercept + geno",
-                omics_name=["omic1", "omic2", "omic3", "omic4", "omic5"],
+                traits=["omic1", "omic2", "omic3", "omic4", "omic5"],
                 method="BayesC"
             ),
             Equation(
                 from_layer_name="omics",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + omics",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 method="BayesC"
             )
         ]

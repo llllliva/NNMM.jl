@@ -41,14 +41,14 @@ using Random
                     from_layer_name="geno",
                     to_layer_name="omics",
                     equation="omics = intercept + geno",
-                    omics_name=["omic1", "omic2", "omic3"],
+                    traits=["omic1", "omic2", "omic3"],
                     method="BayesC"
                 ),
                 Equation(
                     from_layer_name="omics",
                     to_layer_name="phenotypes",
                     equation="phenotypes = intercept + omics",
-                    phenotype_name=["trait1"],
+                    traits=["trait1"],
                     method="BayesC",
                     activation_function=activation
                 )

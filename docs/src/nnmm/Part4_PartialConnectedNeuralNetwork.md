@@ -210,10 +210,10 @@ layers = [
 equations = [
     Equation(from_layer_name="geno", to_layer_name="latent",
              equation="latent = intercept + geno",
-             omics_name=["latent1", "latent2", "latent3"], method="BayesC"),
+             traits=["latent1", "latent2", "latent3"], method="BayesC"),
     Equation(from_layer_name="latent", to_layer_name="phenotypes",
              equation="phenotypes = intercept + latent",
-             phenotype_name=["trait1"], activation_function="tanh")
+             traits=["trait1"], activation_function="tanh")
 ]
 
 # Step 7: Run analysis

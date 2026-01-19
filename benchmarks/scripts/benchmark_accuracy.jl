@@ -71,7 +71,7 @@ equations = [
         from_layer_name="geno",
         to_layer_name="omics",
         equation="omics = intercept + geno",
-        omics_name=["omic$i" for i in 1:10],
+        traits=["omic$i" for i in 1:10],
         method="BayesC",
         estimatePi=true
     ),
@@ -79,7 +79,7 @@ equations = [
         from_layer_name="omics",
         to_layer_name="phenotypes",
         equation="phenotypes = intercept + omics",
-        phenotype_name=["trait1"],
+        traits=["trait1"],
         method="BayesC",
         activation_function="linear"
     )

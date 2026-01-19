@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored `wArray2` to always be initialized (consistent with `wArray1` in Layer 1→2)
   - `wArray2[1]` is now used for single-trait Layer 3 (equivalent to `ycorr2`)
   - Prepares codebase for future multi-trait Layer 3 support
+- **API improvement**: Unified `omics_name` and `phenotype_name` into single `traits` parameter
+  - Old: `Equation(..., omics_name=["omic1"])` or `Equation(..., phenotype_name=["trait1"])`
+  - New: `Equation(..., traits=["omic1"])` or `Equation(..., traits=["trait1"])`
+  - Backward compatible: `omics_name` and `phenotype_name` still work as deprecated aliases
 
 ## [0.1.0] - 2026-01-18
 

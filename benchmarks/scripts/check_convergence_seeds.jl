@@ -88,7 +88,7 @@ for (i, seed) in enumerate(SEEDS)
             from_layer_name="geno",
             to_layer_name="omics",
             equation="omics = intercept + geno",
-            omics_name=["omic$j" for j in 1:10],
+            traits=["omic$j" for j in 1:10],
             method="BayesC",
             estimatePi=true
         ),
@@ -96,7 +96,7 @@ for (i, seed) in enumerate(SEEDS)
             from_layer_name="omics",
             to_layer_name="phenotypes",
             equation="phenotypes = intercept + omics",
-            phenotype_name=["trait1"],
+            traits=["trait1"],
             method="BayesC",
             activation_function="linear"
         )

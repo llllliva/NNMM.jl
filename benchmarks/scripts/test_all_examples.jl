@@ -43,9 +43,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="geno", to_layer_name="omics", equation="omics = intercept + geno",
-                 omics_name=["omic$i" for i in 1:10], method="BayesC"),
+                 traits=["omic$i" for i in 1:10], method="BayesC"),
         Equation(from_layer_name="omics", to_layer_name="pheno", equation="pheno = intercept + omics",
-                 phenotype_name=["trait1"], activation_function="linear")
+                 traits=["trait1"], activation_function="linear")
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t1_out")
@@ -77,9 +77,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="genotypes", to_layer_name="latent", equation="latent = intercept + genotypes",
-                 omics_name=["latent1", "latent2", "latent3"], method="BayesC"),
+                 traits=["latent1", "latent2", "latent3"], method="BayesC"),
         Equation(from_layer_name="latent", to_layer_name="phenotypes", equation="phenotypes = intercept + latent",
-                 phenotype_name=["trait1"], activation_function="tanh")
+                 traits=["trait1"], activation_function="tanh")
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t2_out")
@@ -109,9 +109,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="geno", to_layer_name="omics", equation="omics = intercept + geno",
-                 omics_name=["omic1", "omic2", "omic3"], method="BayesC"),
+                 traits=["omic1", "omic2", "omic3"], method="BayesC"),
         Equation(from_layer_name="omics", to_layer_name="pheno", equation="pheno = intercept + omics",
-                 phenotype_name=["trait1"], activation_function="sigmoid")
+                 traits=["trait1"], activation_function="sigmoid")
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t3_out")
@@ -150,9 +150,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="genotypes", to_layer_name="latent", equation="latent = intercept + genotypes",
-                 omics_name=["latent1", "latent2"], method="BayesC"),
+                 traits=["latent1", "latent2"], method="BayesC"),
         Equation(from_layer_name="latent", to_layer_name="phenotypes", equation="phenotypes = intercept + latent",
-                 phenotype_name=["trait1"], activation_function="tanh")  # Use tanh as workaround
+                 traits=["trait1"], activation_function="tanh")  # Use tanh as workaround
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t5_out")
@@ -184,9 +184,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="geno", to_layer_name="latent", equation="latent = intercept + geno",
-                 omics_name=["latent1", "latent2"], method="BayesC"),
+                 traits=["latent1", "latent2"], method="BayesC"),
         Equation(from_layer_name="latent", to_layer_name="phenotypes", equation="phenotypes = intercept + latent",
-                 phenotype_name=["trait1"], activation_function="linear")
+                 traits=["trait1"], activation_function="linear")
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t6_out")
@@ -216,9 +216,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="geno", to_layer_name="omics", equation="omics = intercept + geno",
-                 omics_name=["omic1", "omic2", "omic3"], method="BayesA"),
+                 traits=["omic1", "omic2", "omic3"], method="BayesA"),
         Equation(from_layer_name="omics", to_layer_name="pheno", equation="pheno = intercept + omics",
-                 phenotype_name=["trait1"], activation_function="linear")
+                 traits=["trait1"], activation_function="linear")
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t7_out")
@@ -248,9 +248,9 @@ try
     ]
     equations = [
         Equation(from_layer_name="geno", to_layer_name="omics", equation="omics = intercept + geno",
-                 omics_name=["omic1", "omic2", "omic3"], method="RR-BLUP"),
+                 traits=["omic1", "omic2", "omic3"], method="RR-BLUP"),
         Equation(from_layer_name="omics", to_layer_name="pheno", equation="pheno = intercept + omics",
-                 phenotype_name=["trait1"], activation_function="linear")
+                 traits=["trait1"], activation_function="linear")
     ]
     out = runNNMM(layers, equations; chain_length=CHAIN_LENGTH, burnin=BURNIN,
                   printout_frequency=999, output_folder="t8_out")

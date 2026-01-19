@@ -222,9 +222,9 @@ function runNNMM(layers, equations;
     printstyled("Note that `center`, `quality_control`, and `MAF` in Layer() function are set to false here forcefully, so please use pre-processed omics data \n",bold=false,color=:green)
 
     #arguments for equations
-    omics_name = equations[1].omics_name
+    omics_name = equations[1].traits
     if omics_name==false
-        error("please provide omics name in the 1st equation.")
+        error("please provide traits in the 1st equation.")
     end
 
     #arguments for mme for 2->3 layer
@@ -310,7 +310,7 @@ function runNNMM(layers, equations;
                             header=header,
                             missing_value=missing_value,
                             output_folder=output_folder)
-    phenoID = equations[2].phenotype_name
+    phenoID = equations[2].traits
     println("phenotype name: ",phenoID)
     if length(phenoID) > 1
         error("Multiple phenotypes in 3rd layer are not supported for now.")
@@ -820,7 +820,7 @@ function runNNMM(layers, equations;
     printstyled("********************************************************** \n",bold=false,color=:green)
     printstyled("Start prepare MCMC....... \n",bold=false,color=:green)
     # 1->2
-    mme_all[1].yobs_name=equations[2].phenotype_name[1] #yobs is phenotype in 3rd layer
+    mme_all[1].yobs_name=equations[2].traits[1] #yobs is phenotype in 3rd layer
 
     
     ############################################################################

@@ -174,9 +174,8 @@ A struct representing an equation connecting layers in NNMM.
 # Fields
 - `from_layer_name`: Source layer name
 - `to_layer_name`: Target layer name
-- `equation`: Model equation string
-- `omics_name`: Names of omics variables (or false if not applicable)
-- `phenotype_name`: Names of phenotype variables (or false if not applicable)
+- `equation`: Model equation string (e.g., "omics = intercept + geno")
+- `traits`: Output trait column names (e.g., ["omic1", "omic2"] or ["trait1"])
 - `covariate`: Covariate variable names
 - `random`: Random effect specifications
 - `activation_function`: Activation function ("linear", "sigmoid", "tanh", etc.)
@@ -186,13 +185,14 @@ A struct representing an equation connecting layers in NNMM.
 - `Pi`: Prior probability of zero effect
 - `estimatePi`: Whether to estimate Pi
 - Variance parameters for G (genetic) and R (residual)
+
+Note: `omics_name` and `phenotype_name` are deprecated aliases for `traits`.
 """
 mutable struct Equation
     from_layer_name::String 
     to_layer_name::String
     equation::String
-    omics_name
-    phenotype_name
+    traits                    # Output trait column names (replaces omics_name/phenotype_name)
     covariate
     random
     activation_function::String
@@ -219,8 +219,9 @@ mutable struct Equation
     function Equation(;from_layer_name::String, 
                       to_layer_name::String, 
                       equation::String,
-                      omics_name=false,
-                      phenotype_name=false,
+                      traits=false,           # New unified parameter
+                      omics_name=false,       # Deprecated alias for traits
+                      phenotype_name=false,   # Deprecated alias for traits
                       covariate=false,
                       random=false,
                       activation_function::String="linear",
@@ -241,12 +242,19 @@ mutable struct Equation
                       estimate_scale_R::Bool=false,
                       constraint_R::Bool=true)
         
-        if omics_name == false && phenotype_name == false
-            error("omics_name or phenotype_name must be provided.")
+        # Handle deprecated aliases (omics_name, phenotype_name) for backward compatibility
+        if traits == false
+            if omics_name != false
+                traits = omics_name
+            elseif phenotype_name != false
+                traits = phenotype_name
+            else
+                error("traits must be provided (specifies output trait column names).")
+            end
         end
         
         new(from_layer_name, to_layer_name, equation,       
-            omics_name, phenotype_name, covariate, random,
+            traits, covariate, random,
             activation_function, partial_connect_structure, starting_value,
             method, Pi, estimatePi,
             G, G_is_marker_variance, df_G, estimate_variance_G, estimate_scale_G, constraint_G,

@@ -71,7 +71,7 @@ using Random
                 from_layer_name="geno",
                 to_layer_name="omics",
                 equation="omics = intercept + ID + geno",
-                omics_name=["omic$i" for i in 1:10],
+                traits=["omic$i" for i in 1:10],
                 random=[(name="ID", pedigree=pedigree)],
                 method="BayesC",
                 estimatePi=true
@@ -80,7 +80,7 @@ using Random
                 from_layer_name="omics",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + ID + omics",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 random=[(name="ID", pedigree=pedigree)],
                 method="BayesC",
                 activation_function="linear"
@@ -149,14 +149,14 @@ using Random
                 from_layer_name="geno",
                 to_layer_name="omics",
                 equation="omics = intercept + geno",
-                omics_name=["omic1", "omic2", "omic3"],
+                traits=["omic1", "omic2", "omic3"],
                 method="BayesC"
             ),
             Equation(
                 from_layer_name="omics",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + omics",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 method="BayesC",
                 activation_function="linear"
             )

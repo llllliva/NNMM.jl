@@ -72,7 +72,7 @@ using Random
                 from_layer_name="geno",
                 to_layer_name="latent",
                 equation="latent = intercept + geno",
-                omics_name=["latent1", "latent2"],
+                traits=["latent1", "latent2"],
                 method="BayesC",
                 estimatePi=true
             ),
@@ -80,7 +80,7 @@ using Random
                 from_layer_name="latent",
                 to_layer_name="phenotypes",
                 equation="phenotypes = intercept + latent",
-                phenotype_name=["trait1"],
+                traits=["trait1"],
                 method="BayesC",
                 activation_function="linear"  # Key: linear activation
             )
@@ -139,7 +139,7 @@ using Random
                         from_layer_name="geno",
                         to_layer_name="latent",
                         equation="latent = intercept + geno",
-                        omics_name=["latent1", "latent2"],
+                        traits=["latent1", "latent2"],
                         method=method,
                         estimatePi=estimate_pi
                     ),
@@ -147,7 +147,7 @@ using Random
                         from_layer_name="latent",
                         to_layer_name="phenotypes",
                         equation="phenotypes = intercept + latent",
-                        phenotype_name=["trait1"],
+                        traits=["trait1"],
                         method=method,
                         activation_function="linear"
                     )

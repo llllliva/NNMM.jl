@@ -108,10 +108,10 @@ layers = [
 equations = [
     Equation(from_layer_name="geno", to_layer_name="omics",
              equation="omics = intercept + geno",
-             omics_name=["omic$i" for i in 1:10], method="BayesC"),
+             traits=["omic$i" for i in 1:10], method="BayesC"),
     Equation(from_layer_name="omics", to_layer_name="pheno",
              equation="pheno = intercept + omics",
-             phenotype_name=["trait1"], activation_function="linear")
+             traits=["trait1"], activation_function="linear")
 ]
 
 # Run MCMC

@@ -47,7 +47,7 @@ using Random
                     from_layer_name="geno",
                     to_layer_name="omics",
                     equation="omics = intercept + geno",
-                    omics_name=["omic1", "omic2", "omic3"],
+                    traits=["omic1", "omic2", "omic3"],
                     method=method,
                     estimatePi=estimate_pi
                 ),
@@ -55,7 +55,7 @@ using Random
                     from_layer_name="omics",
                     to_layer_name="phenotypes",
                     equation="phenotypes = intercept + omics",
-                    phenotype_name=["trait1"],
+                    traits=["trait1"],
                     method=method,
                     estimatePi=estimate_pi
                 )
@@ -92,7 +92,7 @@ using Random
             from_layer_name="geno",
             to_layer_name="omics",
             equation="omics = intercept + geno",
-            omics_name=["omic1"],
+            traits=["omic1"],
             method="BayesC",
             Pi=0.95,
             estimatePi=false
@@ -107,7 +107,7 @@ using Random
             from_layer_name="geno",
             to_layer_name="omics",
             equation="omics = intercept + geno",
-            omics_name=["omic1"],
+            traits=["omic1"],
             method="BayesC",
             estimatePi=true
         )

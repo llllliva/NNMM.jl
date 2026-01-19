@@ -1,8 +1,8 @@
 # Missing Omics Train/Test Benchmark — Results (2026-01-16)
 
 Artifacts:
-- Results CSV snapshot: `benchmarks/missing_omics_train_test_results_20260116_230206.csv`
-- Full run log: `benchmarks/benchmark_missing_omics_train_test_run_20260116_230206.log`
+- Results CSV snapshot: `benchmarks/results/missing_omics_train_test_results_20260116_230206.csv`
+- Full run log: `benchmarks/logs/benchmark_missing_omics_train_test_run_20260116_230206.log`
 
 Configuration (from log):
 - Dataset: `simulated_omics_data` (3534 individuals, 927 SNPs after QC, 10 omics)
@@ -41,8 +41,8 @@ Finiteness check: PASS (no NaNs/Infs in EBV/EPV outputs)
 Δ summary over 5 seeds: mean -0.3020, std 0.0614
 
 Per-seed CSV snapshots:
-- `benchmarks/confirm_75_vs_100_train_missing_test100_seed41_20260116_233419.csv`
-- `benchmarks/confirm_75_vs_100_train_missing_test100_seed42_20260116_233419.csv`
-- `benchmarks/confirm_75_vs_100_train_missing_test100_seed43_20260116_233419.csv`
-- `benchmarks/confirm_75_vs_100_train_missing_test100_seed44_20260116_233419.csv`
-- `benchmarks/confirm_75_vs_100_train_missing_test100_seed45_20260116_233419.csv`
+- `benchmarks/results/confirm_75_vs_100_train_missing_test100_seed41_20260116_233419.csv`
+- `benchmarks/results/confirm_75_vs_100_train_missing_test100_seed42_20260116_233419.csv`
+- `benchmarks/results/confirm_75_vs_100_train_missing_test100_seed43_20260116_233419.csv`
+- `benchmarks/results/confirm_75_vs_100_train_missing_test100_seed44_20260116_233419.csv`
+- `benchmarks/results/confirm_75_vs_100_train_missing_test100_seed45_20260116_233419.csv`

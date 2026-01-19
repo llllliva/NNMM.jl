@@ -4,11 +4,12 @@
     This documentation reflects **NNMM.jl v0.3+** using the `Layer`/`Equation`/`runNNMM` API.
 
 !!! warning "Known Limitation"
-    **User-defined activation functions are not currently supported** due to a type constraint in the 
-    `Equation` struct (which requires `activation_function::String`). Use the built-in activation 
-    functions (`"linear"`, `"sigmoid"`, `"tanh"`, `"relu"`, `"leakyrelu"`) instead.
+    **User-defined activation functions are not yet fully implemented.** The `Equation` struct now 
+    accepts `Union{String, Function}`, but the MCMC sampling logic for custom functions requires 
+    additional development. Currently, passing a Function will result in a clear error message.
     
-    This feature is planned for a future release.
+    Use the built-in activation functions (`"linear"`, `"sigmoid"`, `"tanh"`, `"relu"`, `"leakyrelu"`) 
+    for now. This feature is planned for a future release.
 
 ## Overview
 
@@ -21,12 +22,18 @@ This would be useful when:
 
 ## Current Status
 
-The `Equation` struct currently defines:
+The `Equation` struct now accepts:
 ```julia
-activation_function::String  # Only accepts string values
+activation_function::Union{String, Function}  # Accepts strings or custom functions
 ```
 
-Although the internal code has provisions for user-defined functions, the type constraint prevents passing functions directly.
+However, passing a custom function will currently raise an error:
+```
+ERROR: User-defined activation functions are not yet supported. 
+Please use a built-in activation function: "tanh", "sigmoid", "relu", "leakyrelu", or "linear".
+```
+
+The type change prepares for future implementation of this feature.
 
 ## Workaround: Use Built-in Activation Functions
 
@@ -99,7 +106,7 @@ equations = [
         from_layer_name = "genotypes",
         to_layer_name = "latent",
         equation = "latent = intercept + genotypes",
-        omics_name = ["latent1", "latent2"],
+        traits = ["latent1", "latent2"],
         method = "BayesC",
         estimatePi = true
     ),
@@ -107,7 +114,7 @@ equations = [
         from_layer_name = "latent",
         to_layer_name = "phenotypes",
         equation = "phenotypes = intercept + latent",
-        phenotype_name = ["trait1"],
+        traits = ["trait1"],
         method = "BayesC",
         activation_function = "tanh"  # Use built-in function instead
     )

@@ -19,11 +19,6 @@ In partial-connected neural networks, SNPs can be divided into groups by users, 
 !!! important "Partial Connection Setup"
     To create a partial-connected network, provide **multiple genotype files** in the `data_path` parameter as a vector. The number of genotype files must equal the number of omics features.
 
-!!! warning "Known Bug"
-    **Partial-connected networks currently have a bug** (`wArray2` undefined error) that prevents 
-    them from running successfully. This will be fixed in a future release. For now, use 
-    **fully-connected networks** as a workaround.
-
 !!! important "Data Requirements"
     All genotype files and phenotype files must have matching individual IDs. This example uses 
     the `simulated_omics_data` dataset which has 3534 aligned individuals.
@@ -117,7 +112,7 @@ equations = [
         from_layer_name = "geno",
         to_layer_name = "omics",
         equation = "omics = intercept + geno",  # Internal: omic1=intercept+geno1; omic2=intercept+geno2; omic3=intercept+geno3
-        omics_name = ["omic1", "omic2", "omic3"],  # Must match number of genotype files
+        traits = ["omic1", "omic2", "omic3"],  # Must match number of genotype files
         method = "BayesC",
         estimatePi = true
     ),
@@ -125,7 +120,7 @@ equations = [
         from_layer_name = "omics",
         to_layer_name = "phenotypes",
         equation = "phenotypes = intercept + omics",
-        phenotype_name = ["trait1"],
+        traits = ["trait1"],
         method = "BayesC",
         activation_function = "sigmoid"
     )

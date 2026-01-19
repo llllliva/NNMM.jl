@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Old: `Equation(..., omics_name=["omic1"])` or `Equation(..., phenotype_name=["trait1"])`
   - New: `Equation(..., traits=["omic1"])` or `Equation(..., traits=["trait1"])`
   - Backward compatible: `omics_name` and `phenotype_name` still work as deprecated aliases
+- Changed `activation_function` type from `String` to `Union{String, Function}` in `Equation` struct
+  - Prepares for future user-defined activation function support
+  - Currently shows clear error message if a Function is passed (not yet implemented)
 
 ## [0.1.0] - 2026-01-18
 

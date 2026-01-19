@@ -178,7 +178,7 @@ A struct representing an equation connecting layers in NNMM.
 - `traits`: Output trait column names (e.g., ["omic1", "omic2"] or ["trait1"])
 - `covariate`: Covariate variable names
 - `random`: Random effect specifications
-- `activation_function`: Activation function ("linear", "sigmoid", "tanh", etc.)
+- `activation_function`: Activation function - string ("linear", "sigmoid", "tanh", "relu", "leakyrelu") or custom Function
 - `partial_connect_structure`: Structure for partial connectivity
 - `starting_value`: Starting values for MCMC
 - `method`: Bayesian method ("BayesC", "BayesA", "BayesB", etc.)
@@ -195,7 +195,7 @@ mutable struct Equation
     traits                    # Output trait column names (replaces omics_name/phenotype_name)
     covariate
     random
-    activation_function::String
+    activation_function::Union{String, Function}
     partial_connect_structure
     starting_value
     # Method parameters
@@ -224,7 +224,7 @@ mutable struct Equation
                       phenotype_name=false,   # Deprecated alias for traits
                       covariate=false,
                       random=false,
-                      activation_function::String="linear",
+                      activation_function::Union{String, Function}="linear",
                       partial_connect_structure=false,
                       starting_value=false,
                       method::String="BayesC", 

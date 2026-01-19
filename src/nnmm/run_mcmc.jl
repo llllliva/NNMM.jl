@@ -403,16 +403,13 @@ function runNNMM(layers, equations;
     end
 
     #check nn activation function / user-defined function
-    if isa(equations[2].activation_function, Function)  #e.g., user-defined function=Pig_Growth_Model(o1, o2, o3)
-        num_args = first(methods(equations[2].activation_function)).nargs-1 #number of arguments in activation_function, should = number of nodes in the 2nd layer
-        if num_args != layers[2].data.nMarkers #number of omics in the 2nd layer = layers[2].data.nMarkers
-            error("The number of arguments in user-defined activation_function ≠ number of nodes in the 2nd layer.")
-        end
-        is_nn_activation_fcn = false #is user-defined function
+    if isa(equations[2].activation_function, Function)
+        # User-defined activation functions are not yet fully supported
+        error("User-defined activation functions are not yet supported. Please use a built-in activation function: \"tanh\", \"sigmoid\", \"relu\", \"leakyrelu\", or \"linear\".")
     elseif equations[2].activation_function in ["tanh","sigmoid","relu","leakyrelu","linear"]
-        is_nn_activation_fcn = true #is nn activation function
+        is_nn_activation_fcn = true #is built-in activation function (element-wise, optimized derivatives)
     else
-        error("invalid activation_function.")
+        error("Invalid activation_function. Use: \"tanh\", \"sigmoid\", \"relu\", \"leakyrelu\", or \"linear\".")
     end
 
     printstyled("End checking input data....... \n \n",bold=false,color=:green)

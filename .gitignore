@@ -27,6 +27,7 @@ test/fixtures/
 # NNMM output files (created during analysis)
 IDs_for_individuals_with_*.txt
 nnmm_results*/
+tmp_*.csv
 
 # Development workspace (temporary data, outputs, results)
 dev_workspace/

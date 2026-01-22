@@ -495,7 +495,7 @@ function output_MCMC_samples(mme,vRes,G0,
         writedlm(outfile[trmStri*"_variances"],vec(inv(effect.Gi.val))',',')
     end
 
-    if mme.R.constraint == true
+    if mme.R.constraint == true && !(typeof(vRes) <: Number)
         vRes=diag(vRes)
     end
     writedlm(outfile["residual_variance"],(typeof(vRes) <: Number) ? vRes : vec(vRes)' ,',')
@@ -543,14 +543,21 @@ function output_MCMC_samples(mme,vRes,G0,
          if mme.MCMCinfo.output_heritability == true && mme.MCMCinfo.single_step_analysis == false
 	             #single-trait: a scalar ;  multi-trait: a matrix; mega-trait: a vector
 	             if mme.M != 0 && mme.M[1].G.constraint==true
-	                mygvar = Diagonal(vec(var(EBVmat, dims=1, corrected=true)))
+	                gvar_vec = vec(var(EBVmat, dims=1, corrected=true))
+	                mygvar = ntraits == 1 ? gvar_vec[1] : Diagonal(gvar_vec)
 	             else
-	                mygvar = cov(EBVmat)
+	                mygvar = ntraits == 1 ? var(EBVmat[:,1]) : cov(EBVmat)
 	             end
              genetic_variance = (ntraits == 1 ? mygvar : vec(mygvar)')
              if mme.MCMCinfo.RRM == false
-                 vRes = mme.R.constraint==true ? Diagonal(vRes) : vRes #change to diagonal matrix to avoid error
-                 heritability = (ntraits == 1 ? mygvar/(mygvar+vRes) : (diag(mygvar)./(diag(mygvar)+diag(vRes)))')
+                 if ntraits == 1
+                     # Single trait: scalars
+                     heritability = mygvar / (mygvar + vRes)
+                 else
+                     # Multi-trait: matrices
+                     vRes_diag = mme.R.constraint==true ? Diagonal(vRes) : vRes
+                     heritability = (diag(mygvar)./(diag(mygvar)+diag(vRes_diag)))'
+                 end
                  writedlm(outfile["heritability"],heritability,',')
              end
              writedlm(outfile["genetic_variance"],genetic_variance,',')
@@ -563,7 +570,10 @@ function output_MCMC_samples(mme,vRes,G0,
             BV_NN = mme.nonlinear_function.(Tuple([view(EBVmat,:,i) for i in 1:size(EBVmat,2)])...)
         else  #activation function
             # BV_NN = [ones(size(EBVmat,1)) mme.nonlinear_function.(EBVmat)]*mme.weights_NN
-            BV_NN = mme.nonlinear_function.(EBVmat)*mme.weights_NN #do not include intercepts
+            # Ensure EBVmat stays as matrix even with 1 trait for proper matrix-vector multiplication
+            activated = mme.nonlinear_function.(EBVmat)
+            activated_mat = activated isa AbstractVector ? reshape(activated, :, 1) : activated
+            BV_NN = activated_mat * mme.weights_NN #do not include intercepts
             writedlm(outfile["neural_networks_bias_and_weights"],mme.weights_NN',',')
         end
         writedlm(outfile["EBV_NonLinear"],BV_NN',',')

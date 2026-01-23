@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Fixed variance estimation bug when using train/test split with missing phenotypes
+  - `sample_variance` now uses effective sample size (n_effective) instead of total individuals (n_total)
+  - Individuals with `invweights=0` (prediction-only) are correctly excluded from variance degrees of freedom
+  - Layer 2→3 now correctly sets `invweights2=0` for individuals with missing phenotypes
+  - This fix significantly improves agreement with JWAS (r increased from ~0.94 to ~0.996 on training set)
 - Fixed Layer 2→3 MCMC incorrectly using partial-connected logic (`is_nnbayes_partial` branches)
   - Layer 2→3 now correctly uses fully-connected path regardless of Layer 1→2 connectivity
 - Fixed output file handling for partial-connected networks

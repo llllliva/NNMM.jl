@@ -254,7 +254,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 
     #2->3:
     ############################################################################
-    invweights2               = mme2.invweights
+    invweights2               = copy(mme2.invweights)  # copy to avoid modifying original
     update_priors_frequency2  = mme2.MCMCinfo.update_priors_frequency
     missing_phenotypes2       = mme2.MCMCinfo.missing_phenotypes
     is_multi_trait2           = mme2.nModels != 1
@@ -264,6 +264,27 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
     has_categorical_trait = false
     has_binary_trait = false
     has_censored_trait = false
+
+    # Exclude individuals with missing phenotypes from Layer 2→3 variance estimation.
+    # These individuals cannot contribute to residual variance estimation because their
+    # phenotype is unknown. Similar to JWAS's trainingInd filtering approach.
+    # Note: mme2.yobs contains the phenotype data aligned with mme2.obsID.
+    if mme2.ySparse !== nothing && invweights2 != false
+        # mme2.ySparse contains phenotypes (with missing replaced by 0), check the original yobs
+        # which is stored in mme1.yobs but indexed by mme1.obsID. We need to use mme2's data.
+        # For Layer 2→3, we check if the phenotype was originally missing.
+        # The missingPattern or yobs in mme1 tracks this, but dimensions may differ.
+        # Use the prediction_only mask which was already computed for Layer 1.
+        if mme1.nonlinear_function != false && mme1.latent_traits != false
+            nobs2 = length(invweights2)
+            if length(mme1.yobs) == nobs2
+                missing_pheno = ismissing.(mme1.yobs)
+                if any(missing_pheno)
+                    invweights2[missing_pheno] .= zero(eltype(invweights2))
+                end
+            end
+        end
+    end
 
     ############################################################################
     # Working Variables
@@ -574,8 +595,12 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
         ########################################################################
 	        if mme1.R.estimate_variance == true
 	            has_binary_trait=false #NNMM does not support binary traits now
+	            # Use effective sample size: only individuals with invweights > 0 contribute to SSE,
+	            # so degrees of freedom should also use this count (fixes bias when prediction-only
+	            # individuals are excluded via invweights=0). See JWAS's nTrain approach.
+	            n_effective1 = (invweights1 == false) ? length(mme1.obsID) : count(invweights1 .> 0)
 	            if is_multi_trait1
-	                mme1.R.val = sample_variance(wArray1, length(mme1.obsID),
+	                mme1.R.val = sample_variance(wArray1, n_effective1,
 	                                        mme1.R.df, mme1.R.scale,
 	                                        invweights1,mme1.R.constraint;
 	                                        binary_trait_index=has_binary_trait ? findall(x->x=="categorical(binary)", mme1.traits_type) : false)
@@ -583,7 +608,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	            else #single trait
 	                if !has_categorical_trait && !has_binary_trait # fixed =1 for single categorical/binary trait
 	                    mme1.ROld  = mme1.R.val
-	                    mme1.R.val = sample_variance(ycorr1,length(ycorr1), mme1.R.df, mme1.R.scale, invweights1)
+	                    mme1.R.val = sample_variance(ycorr1, n_effective1, mme1.R.df, mme1.R.scale, invweights1)
 	                end
 	            end
 	            if mme1.MCMCinfo.double_precision == false
@@ -921,8 +946,12 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
         ########################################################################
 	        if mme2.R.estimate_variance == true
 	            has_binary_trait=false #NNMM does not support binary traits now
+	            # Use effective sample size: only individuals with invweights > 0 contribute to SSE,
+	            # so degrees of freedom should also use this count. For Layer 2→3, individuals with
+	            # missing phenotypes should not contribute to variance estimation.
+	            n_effective2 = (invweights2 == false) ? length(mme2.obsID) : count(invweights2 .> 0)
 	            if is_multi_trait2
-	                mme2.R.val = sample_variance(wArray2, length(mme2.obsID),
+	                mme2.R.val = sample_variance(wArray2, n_effective2,
 	                                        mme2.R.df, mme2.R.scale,
 	                                        invweights2,mme2.R.constraint;
 	                                        binary_trait_index=has_binary_trait ? findall(x->x=="categorical(binary)", mme2.traits_type) : false)
@@ -930,7 +959,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	            else #single trait
 	                if !has_categorical_trait && !has_binary_trait # fixed =1 for single categorical/binary trait
 	                    mme2.ROld  = mme2.R.val
-	                    mme2.R.val = sample_variance(ycorr2,length(ycorr2), mme2.R.df, mme2.R.scale, invweights2)
+	                    mme2.R.val = sample_variance(ycorr2, n_effective2, mme2.R.df, mme2.R.scale, invweights2)
 	                end
 	            end
 	            if mme2.MCMCinfo.double_precision == false

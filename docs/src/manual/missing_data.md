@@ -22,8 +22,8 @@ The package handles various combinations of missing data in the middle layer (om
 | **Training** | Partial missing | Observed | ✅ Full | ✅ Full | HMC for missing |
 | **Training** | All missing | Observed | ✅ Full | ✅ Full | HMC for all |
 | **Test** | All observed | Missing | ✅ Full | ❌ Excluded | Not needed |
-| **Test** | Partial missing | Missing | ✅ Full | ❌ Excluded | HMC for missing |
-| **Test** | All missing | Missing | ❌ Excluded | ❌ Excluded | Prior only |
+| **Test** | Partial missing | Missing | ✅ Full | ❌ Excluded | Prior for missing |
+| **Test** | All missing | Missing | ❌ Excluded | ❌ Excluded | Prior for all |
 
 ## Detailed Breakdown
 
@@ -34,16 +34,17 @@ This layer estimates marker effects that predict omics or latent traits from gen
 | Individual Type | Contribution to Marker Effects | Contribution to Variance |
 |-----------------|-------------------------------|-------------------------|
 | **Training with observed L2** | ✅ Yes (observed omics as target) | ✅ Yes |
-| **Training with partial L2** | ✅ Yes (observed omics contribute) | ✅ Yes |
+| **Training with partial L2** | ✅ Yes (observed + HMC-sampled as targets) | ✅ Yes |
 | **Training with all L2 missing** | ✅ Yes (HMC-sampled latent as target) | ✅ Yes |
 | **Test with observed L2** | ✅ Yes (observed omics as target) | ✅ Yes |
-| **Test with partial L2** | ✅ Yes (observed omics only) | ✅ Yes |
+| **Test with partial L2** | ✅ Yes (observed + prior-sampled as targets) | ✅ Yes |
 | **Test with all L2 missing** | ❌ No (excluded via `invweights=0`) | ❌ No |
 
 **Key Points:**
 - Training individuals always contribute to Layer 1→2, regardless of phenotype status
-- Test individuals with observed omics still contribute to marker effect estimation
-- Test individuals with completely missing Layer 2 are excluded from parameter updates
+- Test individuals with observed or partial omics still contribute to marker effect estimation
+- For test individuals with partial L2: **both** observed values and prior-sampled missing values are used as targets
+- Test individuals with completely missing Layer 2 are excluded from parameter updates (no observed "anchor")
 
 ### Layer 2→3 (Omics/Latent → Phenotype)
 
@@ -66,8 +67,8 @@ This layer estimates neural network weights connecting the middle layer to pheno
 | **Observed omics** | Direct from data |
 | **Missing omics (training)** | HMC sampling using phenotype likelihood |
 | **Missing latent (training)** | HMC sampling using phenotype likelihood |
-| **Missing omics (test, partial)** | HMC sampling using prior |
-| **Missing latent (test)** | Prior sampling: `L = X*β + ε` |
+| **Missing omics (test, partial)** | Prior sampling for missing parts |
+| **Missing latent (test, all missing)** | Prior sampling for all |
 
 **Hamiltonian Monte Carlo (HMC) Sampling:**
 
@@ -87,18 +88,145 @@ For test individuals without phenotypes, missing values are sampled from the pri
 L_sampled = X * marker_effects + randn() * sqrt(residual_var)
 ```
 
+## Detailed: L2 Sampling for Test Individuals
+
+This section explains exactly how L2 values are sampled and used for test individuals.
+
+### Test with Partial L2 Missing
+
+**Step 1: Sample missing L2 values from prior**
+```julia
+# For missing omics in test individuals (no phenotype available)
+L_missing_sampled = X * β + ε    # where ε ~ N(0, σ²_residual)
+```
+
+**Step 2: Combine observed and sampled values**
+```julia
+# Final L2 for this individual:
+L2 = [observed_omics..., sampled_omics...]
+```
+
+**Step 3: Use ALL L2 values for marker effect estimation**
+```julia
+# Both observed and sampled values contribute to β update
+# invweights1 = 1 (not excluded)
+β_new = update_marker_effects(X, L2)  # uses full L2
+```
+
+**Example:**
+```
+Test Individual with Partial L2:
+├── Genotypes X = [1, 0, 2, 1]
+├── Omics (before sampling):
+│   ├── omics1 = 0.5 (observed)
+│   ├── omics2 = ?   (missing)
+│   └── omics3 = 0.4 (observed)
+│
+├── Step 1: Sample omics2 from prior
+│   └── omics2_sampled = X × β₂ + ε = 0.3
+│
+├── Step 2: Final L2 = [0.5, 0.3, 0.4]
+│
+└── Step 3: ALL values used for marker effect update
+    ├── β₁ updated using (X, omics1=0.5)  ✅
+    ├── β₂ updated using (X, omics2=0.3)  ✅ (sampled value!)
+    └── β₃ updated using (X, omics3=0.4)  ✅
+```
+
+### Test with All L2 Missing
+
+**Step 1: Sample ALL L2 values from prior**
+```julia
+# All omics/latent values sampled from prior
+L_sampled = X * β + ε    # for all L2 nodes
+```
+
+**Step 2: Do NOT contribute to marker effect estimation**
+```julia
+# invweights1 = 0 (excluded from parameter updates)
+# These sampled values are NOT used to update β
+```
+
+**Step 3: Use sampled values for prediction only**
+```julia
+# EPV = f(L_sampled) × weights_NN
+```
+
+**Example:**
+```
+Test Individual with All L2 Missing:
+├── Genotypes X = [0, 1, 1, 2]
+├── Latent (before sampling):
+│   ├── latent1 = ? (missing)
+│   ├── latent2 = ? (missing)
+│   └── latent3 = ? (missing)
+│
+├── Step 1: Sample ALL from prior
+│   ├── latent1 = X × β₁ + ε₁ = 0.2
+│   ├── latent2 = X × β₂ + ε₂ = -0.1
+│   └── latent3 = X × β₃ + ε₃ = 0.4
+│
+├── Step 2: invweights1 = 0 (EXCLUDED from β update)
+│   └── Sampled values do NOT update marker effects
+│
+└── Step 3: Use for prediction only
+    └── EPV = f([0.2, -0.1, 0.4]) × weights_NN
+```
+
+### Why the Difference?
+
+| Scenario | Why this behavior? |
+|----------|-------------------|
+| **Partial L2 missing** | Observed values provide "anchors" that constrain the estimation. Sampled values fill gaps but the individual still provides useful information. |
+| **All L2 missing** | No observed anchors. Using purely prior-sampled values for β update would be circular (sample from β, then update β) and only add noise without information. |
+
+### MCMC Iteration Flow
+
+```
+Each MCMC iteration:
+═══════════════════════════════════════════════════════════════
+
+1. SAMPLE MISSING L2 VALUES (for all individuals with missing L2):
+   ┌─────────────────────────────────────────────────────────────┐
+   │ Training (has phenotype):                                   │
+   │   → HMC sampling using phenotype likelihood                 │
+   │                                                             │
+   │ Test (no phenotype):                                        │
+   │   → Prior sampling: L = X × β + noise                       │
+   └─────────────────────────────────────────────────────────────┘
+
+2. RESTORE OBSERVED VALUES (for partial missing):
+   ┌─────────────────────────────────────────────────────────────┐
+   │ Replace sampled values with observed values where available │
+   │ (ensures observed data is preserved)                        │
+   └─────────────────────────────────────────────────────────────┘
+
+3. UPDATE MARKER EFFECTS (β):
+   ┌─────────────────────────────────────────────────────────────┐
+   │ Include: Training + Test with observed/partial L2           │
+   │          (invweights1 > 0)                                  │
+   │                                                             │
+   │ Exclude: Test with ALL L2 missing                           │
+   │          (invweights1 = 0)                                  │
+   └─────────────────────────────────────────────────────────────┘
+
+4. UPDATE VARIANCE using n_effective (individuals with invweights > 0)
+
+5. COMPUTE PREDICTIONS (EPV) for all individuals
+```
+
 ## Prediction for Test Individuals
 
 | Test Scenario | EBV (L1→L2) | EPV (L2→L3) |
 |---------------|-------------|-------------|
 | **All L2 observed** | From marker effects | `f(observed_L2) * weights_NN` |
 | **Partial L2 observed** | From marker effects | `f(mixed_L2) * weights_NN` |
-| **All L2 missing** | From marker effects | `f(predicted_L2) * weights_NN` |
+| **All L2 missing** | From marker effects | `f(prior_sampled_L2) * weights_NN` |
 
 Where:
 - `f()` is the activation function (e.g., `tanh`, `sigmoid`, `linear`)
-- `mixed_L2` = combination of observed and HMC-sampled values
-- `predicted_L2` = `X * marker_effects` (from Layer 1)
+- `mixed_L2` = combination of observed values and prior-sampled values for missing parts
+- `prior_sampled_L2` = `X * marker_effects + noise` (sampled from prior)
 
 ## Visual Summary
 

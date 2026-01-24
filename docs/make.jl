@@ -27,6 +27,7 @@ makedocs(
             "Get Started" => "manual/getstarted.md",
             "Tutorial" => "manual/tutorial.md",
             "Missing Data Handling" => "manual/missing_data.md",
+            "Skip Connection & Multi-Class Priors" => "manual/skip_connection.md",
             "Public Functions" => "manual/public.md",
         ],
         "Citing" => "citing/citing.md",

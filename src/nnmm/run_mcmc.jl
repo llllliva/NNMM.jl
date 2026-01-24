@@ -106,6 +106,90 @@ function runNNMM(layers, equations;
     printstyled("The folder $output_folder is created to save results.\n",bold=false,color=:green)
 
     ############################################################################
+    # Helpers
+    ############################################################################
+    function _parse_rhs_terms(equation::AbstractString)
+        lhs_rhs = split(equation, "="; limit=2)
+        if length(lhs_rhs) != 2
+            return String[]
+        end
+        rhs = strip(lhs_rhs[2])
+        terms = String[]
+        for t in split(rhs, "+")
+            s = strip(t)
+            if !isempty(s)
+                push!(terms, s)
+            end
+        end
+        return terms
+    end
+
+    function _prior_get(spec, key::Symbol, default)
+        if spec === nothing || spec == false
+            return default
+        end
+        if spec isa NamedTuple
+            return get(spec, key, default)
+        end
+        if spec isa AbstractDict
+            if haskey(spec, key)
+                return spec[key]
+            end
+            skey = String(key)
+            return haskey(spec, skey) ? spec[skey] : default
+        end
+        error("NNMM: class_priors entry must be a NamedTuple or Dict (got $(typeof(spec)))")
+    end
+
+    function _resolve_marker_prior(eq::Equation, class_name::AbstractString; fallback_class_name=nothing)
+        # Defaults come from Equation fields (backward-compatible).
+        method = eq.method
+        Pi = eq.Pi
+        estimatePi = eq.estimatePi
+        G = eq.G
+        G_is_marker_variance = eq.G_is_marker_variance
+        df_G = eq.df_G
+        estimate_variance_G = eq.estimate_variance_G
+        estimate_scale_G = eq.estimate_scale_G
+        constraint_G = eq.constraint_G
+
+        spec = nothing
+        if eq.class_priors != false && eq.class_priors !== nothing
+            if eq.class_priors isa AbstractDict
+                if haskey(eq.class_priors, class_name)
+                    spec = eq.class_priors[class_name]
+                elseif fallback_class_name !== nothing && haskey(eq.class_priors, fallback_class_name)
+                    spec = eq.class_priors[fallback_class_name]
+                end
+            else
+                error("NNMM: class_priors must be a Dict (got $(typeof(eq.class_priors)))")
+            end
+        end
+
+        method = _prior_get(spec, :method, method)
+        Pi = _prior_get(spec, :Pi, Pi)
+        estimatePi = _prior_get(spec, :estimatePi, estimatePi)
+        G = _prior_get(spec, :G, G)
+        G_is_marker_variance = _prior_get(spec, :G_is_marker_variance, G_is_marker_variance)
+        df_G = _prior_get(spec, :df_G, df_G)
+        estimate_variance_G = _prior_get(spec, :estimate_variance_G, estimate_variance_G)
+        estimate_scale_G = _prior_get(spec, :estimate_scale_G, estimate_scale_G)
+        constraint_G = _prior_get(spec, :constraint_G, constraint_G)
+
+        return (
+            method=method,
+            Pi=Pi,
+            estimatePi=estimatePi,
+            G=G,
+            G_is_marker_variance=G_is_marker_variance,
+            df_G=df_G,
+            estimate_variance_G=estimate_variance_G,
+            estimate_scale_G=estimate_scale_G,
+            constraint_G=constraint_G,
+        )
+    end
+
+    ############################################################################
     # Step1. read genotypes in layer 1
     #  note: need to read genotypes here because "method" is defined in equations
     ############################################################################
@@ -228,34 +312,25 @@ function runNNMM(layers, equations;
     end
 
     #arguments for mme for 2->3 layer
-    G = equations[2].G
-    method = equations[2].method
-    if method == "GBLUP"
-        error("GBLUP is not supported from 2->3 layers. Try BayesC, RR-BLUP, etc..") #because when omics need imputation, GRM should be calculated in every MCMC iteration
+    omics_prior = _resolve_marker_prior(equations[2], layers[2].layer_name)
+    if omics_prior.method == "GBLUP"
+        error("GBLUP is not supported for the middle-layer term in 2->3. Try BayesC, RR-BLUP, etc..") # GRM would need to be updated if omics are sampled
     end
-    # Note: constraint defaults to true from Equation struct (independent variances per trait, parallelizable)
-    Pi                   = equations[2].Pi
-    estimatePi           = equations[2].estimatePi
-    G_is_marker_variance = equations[2].G_is_marker_variance #G is omics variance
-    df_G                   = equations[2].df_G
-    estimate_variance_G    = equations[2].estimate_variance_G
-    estimate_scale_G       = equations[2].estimate_scale_G
-    constraint_G           = equations[2].constraint_G
 
     if equations[2].starting_value != false
         error("user-defined starting value is not supported from 2->3 layer.")
     end
 
     # omics is of type "genotypes"
-    omics = nnmm_get_omics(file_path, G;
+    omics = nnmm_get_omics(file_path, omics_prior.G;
                     ## omics name:
                     omics_name = omics_name,
                     ## method:
-                    method = method, Pi = Pi, estimatePi = estimatePi, 
+                    method = omics_prior.method, Pi = omics_prior.Pi, estimatePi = omics_prior.estimatePi, 
                     ## variance:
-                    G_is_marker_variance = G_is_marker_variance, df = df_G,
-                    estimate_variance = estimate_variance_G, estimate_scale = estimate_scale_G,
-                    constraint = constraint_G, 
+                    G_is_marker_variance = omics_prior.G_is_marker_variance, df = omics_prior.df_G,
+                    estimate_variance = omics_prior.estimate_variance_G, estimate_scale = omics_prior.estimate_scale_G,
+                    constraint = omics_prior.constraint_G, 
                     ## format:
                     separator = separator, header = true,
                     ## quality control:
@@ -355,10 +430,27 @@ function runNNMM(layers, equations;
     if equ_left_tmp != layers[2].layer_name || n_occurrences != 1
         error("The layer name in equation is not consistent with the layer name, and please only include it once in your equation.")
     end
-    equ_left_tmp, equ_right_tmp = strip.(split(equations[2].equation,"=")) # "phenotypes = intercept + omics"
-    n_occurrences = length(split(equ_right_tmp, layers[2].layer_name)) - 1 # how many times "omics" appears in the right of equation, must=1
-    if equ_left_tmp != layers[3].layer_name || n_occurrences != 1
-        error("The layer name in equation is not consistent with the layer name, and please only include it once in your equation.")
+    equ_left_tmp, equ_right_tmp = strip.(split(equations[2].equation,"=")) # "phenotypes = intercept + omics (+ geno)"
+    rhs_terms_23 = _parse_rhs_terms(equations[2].equation)
+    # Middle layer term must appear exactly once.
+    n_mid = count(==(layers[2].layer_name), rhs_terms_23)
+    if equ_left_tmp != layers[3].layer_name || n_mid != 1
+        error("The layer name in equation is not consistent with the layer name, and please include the middle-layer term exactly once in your equation.")
+    end
+    # Validate genotype skip term usage.
+    geno_base = layers[1].layer_name
+    geno_block_names = [string(g.name) for g in layers[1].data]
+    has_base = geno_base in rhs_terms_23
+    geno_specific_names = filter(!=(geno_base), geno_block_names)
+    has_specific = any(in(rhs_terms_23), geno_specific_names)
+    if has_base && has_specific
+        error("In 2->3, use either '$(geno_base)' (all genotype blocks) OR specific genotype blocks ($(join(geno_block_names, ", "))). Do not mix both.")
+    end
+    # Disallow duplicated layer terms (middle layer + genotype terms).
+    for nm in vcat([layers[2].layer_name, geno_base], geno_block_names)
+        if count(==(nm), rhs_terms_23) > 1
+            error("In 2->3, term '$nm' appears more than once. Please include each layer term at most once.")
+        end
     end
 
     # #check partial_connect_structure
@@ -709,6 +801,7 @@ function runNNMM(layers, equations;
     # 2->3: Omics (will be added to MME)
     ############################################################################
     omics = []
+    genotypes_skip = []
     whichterm = 1
     for term in modelTerms
         term_symbol = Symbol(split(term.trmStr,":")[end])
@@ -729,6 +822,46 @@ function runNNMM(layers, equations;
             end
             push!(omics,omicsi)
           end
+        end
+        # Optional skip connection: include genotypes directly in 2->3 as an additional marker class.
+        if term_symbol == Symbol(layers[1].layer_name) || term_symbol in Symbol.(string.(map(x -> x.name, layers[1].data)))
+            term.random_type = "genotypes"
+
+            geno_by_name = Dict(string(g.name) => g for g in layers[1].data)
+            # Shorthand "Genotypes" means include ALL genotype blocks when multiple are present.
+            selected_geno_names = String[]
+            if term_symbol == Symbol(layers[1].layer_name)
+                if length(layers[1].data) == 1
+                    push!(selected_geno_names, string(layers[1].data[1].name))
+                else
+                    append!(selected_geno_names, keys(geno_by_name))
+                end
+            else
+                push!(selected_geno_names, string(term_symbol))
+            end
+
+            for gname in selected_geno_names
+                skip_name = gname * "_skip"
+                if skip_name ∉ map(x -> x.name, genotypes_skip)
+                    base = geno_by_name[gname]
+                    # Resolve priors for this genotype class:
+                    geno_prior = _resolve_marker_prior(equations[2], gname; fallback_class_name=layers[1].layer_name)
+                    if geno_prior.method == "GBLUP"
+                        error("NNMM: GBLUP for 2->3 genotype skip is not supported yet in NNMM's multi-class setup. Use BayesC, RR-BLUP, etc.")
+                    end
+                    geno2 = Genotypes(base.obsID, base.markerID, base.nObs, base.nMarkers, base.alleleFreq, base.sum2pq, base.centered, base.genotypes, base.isGRM)
+                    geno2.name = skip_name
+                    geno2.ntraits = nModels
+                    geno2.trait_names = string.(lhsVec)
+                    geno2.G = Variance(geno_prior.G_is_marker_variance ? geno_prior.G : false, geno_prior.df_G, false, geno_prior.estimate_variance_G, geno_prior.estimate_scale_G, geno_prior.constraint_G)
+                    geno2.genetic_variance = Variance(geno_prior.G_is_marker_variance ? false : geno_prior.G, geno_prior.df_G, false, geno_prior.estimate_variance_G, geno_prior.estimate_scale_G, geno_prior.constraint_G)
+                    geno2.method = geno_prior.method
+                    geno2.estimatePi = geno_prior.estimatePi
+                    geno2.π = geno_prior.Pi
+
+                    push!(genotypes_skip, geno2)
+                end
+            end
         end
     end
 
@@ -757,7 +890,7 @@ function runNNMM(layers, equations;
             R==false ? R : scale_R,     #scale
             estimate_variance_R, estimate_scale_R, constraint_R))
 
-    mme2.M = omics #add omics into mme
+    mme2.M = vcat(omics, genotypes_skip) #omics first, then optional genotype-skip classes
     mme2.is_fully_connected   = is_fully_connected_23 # =true
     
 
@@ -994,6 +1127,8 @@ function runNNMM(layers, equations;
     #2->3
     #align omics with output IDs.
     align_omics(mme_all[2],output_heritability,single_step_analysis)
+    #align genotypes (skip connection) with phenotypes/output IDs if present.
+    align_genotypes(mme_all[2],output_heritability,single_step_analysis)
     #align genotypes with phenotypes IDs;
     align_transformed_omics_with_phenotypes(mme_all[2],mme_all[1].nonlinear_function)
     # initiate Mixed Model Equations and check starting values

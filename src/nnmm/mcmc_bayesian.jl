@@ -109,6 +109,13 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
         end
     end
 
+    # Helper: get the marker design matrix for layer 2→3 marker classes.
+    # - Omics: uses activation-transformed omics aligned to phenotypes
+    # - Genotypes: uses aligned genotype covariate matrix (skip connection)
+    marker_matrix_23(Mi) = Mi isa Omics ? Mi.aligned_omics_w_phenotype :
+                           (Mi isa Genotypes ? Mi.genotypes :
+                            error("NNMM: unsupported marker class in 2->3: $(typeof(Mi))"))
+
     ############################################################################
     # Working Variables
     # 1) samples at current iteration (starting values default to zeros)
@@ -308,12 +315,12 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
         for Mi in mme2.M
             #Mi.α  (starting values were set in get_genotypes)
             Mi_genotypes = convert(mme2.MCMCinfo.double_precision ? Matrix{Float64} : Matrix{Float32},
-                                   Mi.aligned_omics_w_phenotype)
+                                   marker_matrix_23(Mi))
             mGibbs    = GibbsMats(Mi_genotypes,invweights2)
             Mi.mArray,Mi.mRinvArray,Mi.mpRinvm  = mGibbs.xArray,mGibbs.xRinvArray,mGibbs.xpRinvx
 
             if Mi.method=="BayesB" #α=β.*δ
-                Mi.G.val        = fill(Mi.G.val,Mi.nFeatures) #a scalar in BayesC but a vector in BayeB
+                Mi.G.val        = fill(Mi.G.val,Mi.nMarkers) #a scalar in BayesC but a vector in BayeB
             end
             if Mi.method=="BayesL"         #in the MTBayesLasso paper
                 if mme2.nModels == 1
@@ -325,13 +332,13 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                     Mi.G.scale     /= 4*(Mi.ntraits+1)
                     gammaDist     = Gamma((Mi.ntraits+1)/2, 8) #8 (1/8): the scale (rate) parameter
                 end
-                Mi.gammaArray = rand(gammaDist,Mi.nFeatures)
+                Mi.gammaArray = rand(gammaDist,Mi.nMarkers)
             end
             if Mi.method=="GBLUP"
                 GBLUP_setup(Mi)
             end
             Mi.β                  = [copy(Mi.α[traiti]) for traiti = 1:Mi.ntraits] #partial marker effeccts used in BayesB
-            Mi.δ                  = [ones(typeof(Mi.α[traiti][1]),Mi.nFeatures) for traiti = 1:Mi.ntraits] #inclusion indicator for marker effects
+            Mi.δ                  = [ones(typeof(Mi.α[traiti][1]),Mi.nMarkers) for traiti = 1:Mi.ntraits] #inclusion indicator for marker effects
             Mi.meanAlpha          = [zero(Mi.α[traiti]) for traiti = 1:Mi.ntraits] #marker effects
             Mi.meanAlpha2         = [zero(Mi.α[traiti]) for traiti = 1:Mi.ntraits] #marker effects
             Mi.meanDelta          = [zero(Mi.δ[traiti]) for traiti = 1:Mi.ntraits] #inclusion indicator for marker effects
@@ -367,9 +374,8 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
     ycorr2 = vec(Matrix(mme2.ySparse) - mme2.X * mme2.sol) #length of ycorr2 is #individuals with non-missing yobs
     if mme2.M != 0
         for Mi in mme2.M
-            Xomics = Mi.aligned_omics_w_phenotype
             # MT 2->3 is not supported for now, so Mi.ntraits is expected to be 1
-            ycorr2 .-= Xomics * Mi.α[1]
+            ycorr2 .-= marker_matrix_23(Mi) * Mi.α[1]
         end
     end
 
@@ -650,6 +656,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
     
         #sample latent traits (omics) only where omics are incomplete
         incomplete_omics = mme1.incomplete_omics #indicator for ind with no/partial omics
+        
         if sum(incomplete_omics) != 0   #at least 1 ind with incomplete omics
             # HMC/MH uses the phenotype likelihood term, so restrict it to inds with observed yobs.
             has_yobs = .!ismissing.(yobs)
@@ -658,35 +665,58 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 
 	            if any(incomplete_with_yobs)
 	                if mme1.is_activation_fcn == true #Neural Network with activation function (incl. linear)
-	                    # Step 1. sample latent traits for incomplete inds with observed yobs.
-	                    #
-	                    # Map ycorr2 (2->3 residuals, in mme2.obsID order) back to the
-	                    # full omics/individual order so it aligns with `ylats_old` and `yobs`.
-	                    ycorr_yobs_all = Z_yobs_from_omics' * ycorr2
-	                    if Z_obs_from_layer2_omics !== nothing
-	                        ycorr_yobs_all = Z_obs_from_layer2_omics * ycorr_yobs_all
-	                    end
-	                    ycorr_yobs = ycorr_yobs_all[incomplete_with_yobs]
-
-	                    if is_linear_activation
-	                        # Linear activation => closed-form Gaussian conditional; avoid HMC instability.
-	                        ylats_old_inc = ylats_old[incomplete_with_yobs, :]
-	                        y_centered = ycorr_yobs .+ (ylats_old_inc * mme1.weights_NN) # y - Xb
-	                        ylats_new = sample_latent_traits_linear_gaussian(
-	                            μ_ylats[incomplete_with_yobs, :],
-	                            y_centered,
+		                    if is_linear_activation
+		                        # Linear activation => exact Gaussian conditional for *missing* entries, conditional on observed entries.
+		                        #
+		                        # Compute y_centered = y - Xb - (genotype-skip effects) in the full middle-layer (mme1) order.
+		                        # We subtract genotype-skip terms here so the latent-trait conditional uses only the omics→y mapping.
+		                        y_centered_train = vec(Matrix(mme2.ySparse) - mme2.X * mme2.sol)
+		                        if mme2.M != 0 && length(mme2.M) > 1
+		                            for Mi in mme2.M
+		                                if Mi isa Genotypes
+		                                    y_centered_train .-= Mi.genotypes * Mi.α[1]
+		                                end
+		                            end
+		                        end
+		                        y_centered_all = Z_yobs_from_omics' * y_centered_train
+		                        if Z_obs_from_layer2_omics !== nothing
+		                            y_centered_all = Z_obs_from_layer2_omics * y_centered_all
+		                        end
+	                        inc_idx = findall(incomplete_with_yobs)
+	                        sample_missing_latent_traits_linear_gaussian!(
+	                            view(ylats_old, inc_idx, :),
+	                            view(μ_ylats, inc_idx, :),
+	                            y_centered_all[inc_idx],
 	                            mme1.weights_NN,
 	                            mme1.R.val,
 	                            σ2_yobs,
+	                            mme1.missingPattern[inc_idx, :],
 	                        )
 	                    else
-	                        ylats_new = hmc_one_iteration(10, 0.1,
-	                                                     ylats_old[incomplete_with_yobs, :],
-	                                                     yobs[incomplete_with_yobs],
-	                                                     mme1.weights_NN, mme1.R.val, σ2_yobs,
-	                                                     ycorr_reshape[incomplete_with_yobs, :],
-	                                                     nonlinear_function,
-	                                                     ycorr_yobs)
+	                        # Step 1. sample latent traits for incomplete inds with observed yobs via HMC.
+	                        #
+	                        # Map ycorr2 (2->3 residuals, in mme2.obsID order) back to the
+	                        # full omics/individual order so it aligns with `ylats_old` and `yobs`.
+	                        ycorr_yobs_all = Z_yobs_from_omics' * ycorr2
+	                        if Z_obs_from_layer2_omics !== nothing
+	                            ycorr_yobs_all = Z_obs_from_layer2_omics * ycorr_yobs_all
+	                        end
+	                        ycorr_yobs = ycorr_yobs_all[incomplete_with_yobs]
+
+	                        ylats_new = hmc_one_iteration_masked(10, 0.1,
+	                                                            ylats_old[incomplete_with_yobs, :],
+	                                                            yobs[incomplete_with_yobs],
+	                                                            mme1.weights_NN, mme1.R.val, σ2_yobs,
+	                                                            ycorr_reshape[incomplete_with_yobs, :],
+	                                                            nonlinear_function,
+	                                                            ycorr_yobs,
+	                                                            mme1.missingPattern[incomplete_with_yobs, :])
+
+	                        if any(x -> !isfinite(x), ylats_new)
+	                            @warn "NNMM: non-finite latent trait draw; keeping previous values for this iteration" iter=iter
+	                        else
+	                            ylats_old[incomplete_with_yobs, :] = ylats_new
+	                        end
 	                    end
                 else  # user-defined function, MH (phenotype likelihood only)
                     ylats_old_inc = ylats_old[incomplete_with_yobs, :]
@@ -694,16 +724,21 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                     yobs_inc      = yobs[incomplete_with_yobs]
                     ninc          = size(ylats_old_inc, 1)
 
-                    T = eltype(μ_ylats_inc)
-                    if mme1.R.val isa Number
-                        candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) .* sqrt(T(mme1.R.val))
-                    elseif mme1.R.val isa Diagonal
-                        sds = sqrt.(diag(mme1.R.val))
-                        candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) .* reshape(T.(sds), 1, :)
-                    else
-                        L = cholesky(Symmetric(mme1.R.val)).L
-                        candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) * L'
-                    end
+	                    T = eltype(μ_ylats_inc)
+	                    # Propose only missing entries; keep observed omics fixed.
+	                    observed_mask_inc = mme1.missingPattern[incomplete_with_yobs, :]
+	                    missing_mask_inc = .!observed_mask_inc
+	                    candidates = copy(ylats_old_inc)
+	                    if mme1.R.val isa Number
+	                        draws = μ_ylats_inc .+ randn(T, ninc, ntraits) .* sqrt(T(mme1.R.val))
+	                    elseif mme1.R.val isa Diagonal
+	                        sds = sqrt.(diag(mme1.R.val))
+	                        draws = μ_ylats_inc .+ randn(T, ninc, ntraits) .* reshape(T.(sds), 1, :)
+	                    else
+	                        L = cholesky(Symmetric(mme1.R.val)).L
+	                        draws = μ_ylats_inc .+ randn(T, ninc, ntraits) * L'
+	                    end
+	                    candidates[missing_mask_inc] .= draws[missing_mask_inc]
 
                     if nonlinear_function == "Neural Network (MH)"
                         error("not supported for now")
@@ -716,14 +751,14 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                     mhRatio       = exp.(llh_candidate - llh_current)
                     updateus      = rand(ninc) .< mhRatio
                     ylats_new     = candidates .* updateus + ylats_old_inc .* (.!updateus)
-                end
 
-	                #step 2. update ylats with sampled latent traits
-	                if any(x -> !isfinite(x), ylats_new)
-	                    @warn "NNMM: non-finite latent trait draw; keeping previous values for this iteration" iter=iter
-	                else
-	                    ylats_old[incomplete_with_yobs, :] = ylats_new
-	                end
+                    # Update latent traits with sampled values.
+                    if any(x -> !isfinite(x), ylats_new)
+                        @warn "NNMM: non-finite latent trait draw; keeping previous values for this iteration" iter=iter
+                    else
+                        ylats_old[incomplete_with_yobs, :] = ylats_new
+                    end
+                end
 	            end
 
             # For incomplete inds without yobs, sample from the 1->2 conditional normal model only.
@@ -731,19 +766,19 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                 μ_ylats_inc = μ_ylats[incomplete_no_yobs, :]
                 ninc = size(μ_ylats_inc, 1)
                 T = eltype(μ_ylats_inc)
-	                if mme1.R.val isa Number
-	                    candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) .* sqrt(T(mme1.R.val))
-	                elseif mme1.R.val isa Diagonal
-	                    sds = sqrt.(diag(mme1.R.val))
-	                    candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) .* reshape(T.(sds), 1, :)
-	                else
-	                    L = cholesky(Symmetric(mme1.R.val)).L
-	                    candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) * L'
-	                end
-	                if any(x -> !isfinite(x), candidates)
-	                    error("NNMM: non-finite latent trait candidates for individuals without phenotype at iter=$iter")
-	                end
-	                ylats_old[incomplete_no_yobs, :] = candidates
+                if mme1.R.val isa Number
+                    candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) .* sqrt(T(mme1.R.val))
+                elseif mme1.R.val isa Diagonal
+                    sds = sqrt.(diag(mme1.R.val))
+                    candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) .* reshape(T.(sds), 1, :)
+                else
+                    L = cholesky(Symmetric(mme1.R.val)).L
+                    candidates = μ_ylats_inc .+ randn(T, ninc, ntraits) * L'
+                end
+                if any(x -> !isfinite(x), candidates)
+                    error("NNMM: non-finite latent trait candidates for individuals without phenotype at iter=$iter")
+                end
+                ylats_old[incomplete_no_yobs, :] = candidates
 	            end
 	        end
         
@@ -763,25 +798,24 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
         #update data for 2->3
         #update omics data
         mme2.M[1].data[!,mme2.M[1].featureID] = ylats_old
-        #update aligned transformed omics data (g(z))
-        align_transformed_omics_with_phenotypes(mme2,nonlinear_function)
-        #update ycorr2 (2->3): y - X*b - Σ(Z_i * α_i)
-        ycorr2[:] = vec(Matrix(mme2.ySparse) - mme2.X * mme2.sol)
-	        if mme2.M != 0
-	            for Mi in mme2.M
-	                Xomics = Mi.aligned_omics_w_phenotype
-	                ycorr2 .-= Xomics * Mi.α[1]
-	            end
-	        end
-	        if any(x -> !isfinite(x), ycorr2)
-	            n_bad = count(x -> !isfinite(x), ycorr2)
-	            error("NNMM: ycorr2 contains $n_bad non-finite value(s) at iter=$iter; aborting to avoid NaN cascades.")
+	        #update aligned transformed omics data (g(z))
+	        align_transformed_omics_with_phenotypes(mme2,nonlinear_function)
+	        #update ycorr2 (2->3): y - X*b - Σ(Z_i * α_i)
+	        ycorr2[:] = vec(Matrix(mme2.ySparse) - mme2.X * mme2.sol)
+		        if mme2.M != 0
+		            for Mi in mme2.M
+		                ycorr2 .-= marker_matrix_23(Mi) * Mi.α[1]
+		            end
+		        end
+		        if any(x -> !isfinite(x), ycorr2)
+		            n_bad = count(x -> !isfinite(x), ycorr2)
+		            error("NNMM: ycorr2 contains $n_bad non-finite value(s) at iter=$iter; aborting to avoid NaN cascades.")
 	        end
 	        #update Mi.mArray, Mi.mRinvArray, Mi.mpRinvx for 2->3
 	        Mi_genotypes = convert(mme2.MCMCinfo.double_precision ? Matrix{Float64} : Matrix{Float32},
-	                               mme2.M[1].aligned_omics_w_phenotype)
-        mGibbs    = GibbsMats(Mi_genotypes,invweights2)
-        mme2.M[1].mArray, mme2.M[1].mRinvArray, mme2.M[1].mpRinvm  = mGibbs.xArray, mGibbs.xRinvArray, mGibbs.xpRinvx
+	                               marker_matrix_23(mme2.M[1]))
+	        mGibbs    = GibbsMats(Mi_genotypes,invweights2)
+	        mme2.M[1].mArray, mme2.M[1].mRinvArray, mme2.M[1].mpRinvm  = mGibbs.xArray, mGibbs.xRinvArray, mGibbs.xpRinvx
         if debug_scale && iter <= debug_scale_iters && mme2.M != 0 && length(mme2.M) > 0
             Mi_dbg = mme2.M[1]
             X_dbg = Mi_dbg.aligned_omics_w_phenotype
@@ -833,7 +867,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                 # Marker Effects
                 ########################################################################
                 if Mi.method in ["BayesC","BayesB","BayesA"]
-                    locus_effect_variances = (Mi.method == "BayesC" ? fill(Mi.G.val,Mi.nFeatures) : Mi.G.val)
+                    locus_effect_variances = (Mi.method == "BayesC" ? fill(Mi.G.val,Mi.nMarkers) : Mi.G.val)
 	                    if is_multi_trait2
 	                        if Mi.G.constraint==true
 	                            megaBayesABC!(Mi, wArray2, mme2.R.val, locus_effect_variances; rngs=thread_rngs)
@@ -889,12 +923,12 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                 if Mi.estimatePi == true
                     if is_multi_trait2
                         if Mi.G.constraint==true
-                            Mi.π = [samplePi(sum(Mi.δ[i]), Mi.nFeatures) for i in 1:mme2.nModels]
+                            Mi.π = [samplePi(sum(Mi.δ[i]), Mi.nMarkers) for i in 1:mme2.nModels]
                         else
                             samplePi(Mi.δ,Mi.π) #samplePi(deltaArray,Mi.π,labels)
                         end
                     else
-                        Mi.π = samplePi(sum(Mi.δ[1]), Mi.nFeatures)
+                        Mi.π = samplePi(sum(Mi.δ[1]), Mi.nMarkers)
                     end
                 end
                 ########################################################################
@@ -918,16 +952,15 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	                end
 	            end
 	        end
-	        if debug_invariants && iter <= debug_invariants_iters
-	            ycorr2_check = vec(mme2.ySparse) - mme2.X * mme2.sol
-	            if mme2.M != 0
-	                for Mi in mme2.M
-	                    Xomics = Mi.aligned_omics_w_phenotype
-	                    ycorr2_check .-= Xomics * Mi.α[1]
-	                end
-	            end
-	            println("[NNMM_DEBUG_INVARIANTS iter=$(iter)] ycorr2 maxabs(check-current)=$(maximum(abs.(ycorr2_check .- ycorr2)))")
-	        end
+		        if debug_invariants && iter <= debug_invariants_iters
+		            ycorr2_check = vec(mme2.ySparse) - mme2.X * mme2.sol
+		            if mme2.M != 0
+		                for Mi in mme2.M
+		                    ycorr2_check .-= marker_matrix_23(Mi) * Mi.α[1]
+		                end
+		            end
+		            println("[NNMM_DEBUG_INVARIANTS iter=$(iter)] ycorr2 maxabs(check-current)=$(maximum(abs.(ycorr2_check .- ycorr2)))")
+		        end
 	        ########################################################################
 	        # 3. Non-marker Variance Components
 	        ########################################################################
@@ -1017,20 +1050,28 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
             if mme2.M != 0 && length(mme2.M) > 0
                 writedlm(outfile["layer2_effect_variance"], mme2.M[1].G.val', ',')
             end
-            # Save EPV (Estimated Phenotypic Value) using OBSERVED omics
-            # EPV = activation(observed_omics) * weights_NN
-            # This complements EBV_NonLinear which uses PREDICTED omics from genotypes
-            if mme1.nonlinear_function != false && mme2.M != 0 && length(mme2.M) > 0
-                observed_omics = mme2.M[1].aligned_omics_w_phenotype
-                if mme1.is_activation_fcn == true
-                    # `aligned_omics_w_phenotype` is already activation-transformed (see align_transformed_omics_with_phenotypes),
-                    # so do NOT apply the activation function a second time.
-                    EPV_NN = observed_omics * mme1.weights_NN
-                else
-                    EPV_NN = mme1.nonlinear_function.(Tuple([view(observed_omics,:,i) for i in 1:size(observed_omics,2)])...)
-                end
-                writedlm(outfile["EPV_NonLinear"], EPV_NN', ',')
-            end
+	            # Save EPV (Estimated Phenotypic Value) using OBSERVED omics
+	            # EPV = activation(observed_omics) * weights_NN
+	            # This complements EBV_NonLinear which uses PREDICTED omics from genotypes
+	            if mme1.nonlinear_function != false && mme2.M != 0 && length(mme2.M) > 0
+	                observed_omics = mme2.M[1].aligned_omics_w_phenotype
+	                if mme1.is_activation_fcn == true
+	                    # `aligned_omics_w_phenotype` is already activation-transformed (see align_transformed_omics_with_phenotypes),
+	                    # so do NOT apply the activation function a second time.
+	                    EPV_NN = observed_omics * mme1.weights_NN
+	                else
+	                    EPV_NN = mme1.nonlinear_function.(Tuple([view(observed_omics,:,i) for i in 1:size(observed_omics,2)])...)
+	                end
+	                # Add optional genotype-skip contributions (Layer 1 → Layer 3 direct term).
+	                if length(mme2.M) > 1
+	                    for Mi in mme2.M
+	                        if Mi isa Genotypes
+	                            EPV_NN .+= Mi.genotypes * Mi.α[1]
+	                        end
+	                    end
+	                end
+	                writedlm(outfile["EPV_NonLinear"], EPV_NN', ',')
+	            end
 
             # Save EPV on output IDs (includes test individuals even if phenotype is missing).
 	            if mme1.output_ID != 0 && haskey(outfile, "EPV_Output_NonLinear")
@@ -1047,6 +1088,21 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	                else
                     EPV_out = mme1.nonlinear_function.(Tuple([view(omics_out, :, i) for i in 1:size(omics_out, 2)])...)
                 end
+	                # Add genotype-skip contributions on output IDs.
+	                if mme2.M != 0 && length(mme2.M) > 1
+	                    n_out = length(mme1.output_ID)
+	                    for Mi in mme2.M
+	                        if Mi isa Genotypes
+	                            if Mi.output_genotypes == false
+	                                error("NNMM: missing output genotypes for 2->3 genotype-skip term; cannot compute EPV_Output_NonLinear")
+	                            end
+	                            if size(Mi.output_genotypes, 1) != n_out
+	                                error("NNMM: output genotypes for 2->3 genotype-skip term have $(size(Mi.output_genotypes,1)) rows, expected $n_out")
+	                            end
+	                            EPV_out .+= Mi.output_genotypes * Mi.α[1]
+	                        end
+	                    end
+	                end
                 writedlm(outfile["EPV_Output_NonLinear"], EPV_out', ',')
             end
         end

@@ -137,6 +137,115 @@ function hmc_one_iteration(nLeapfrog,ϵ,ylats_old,yobs,weights_NN,σ_ylats,σ_yo
     return ylats_new
 end
 
+# Masked HMC update: only update missing entries, conditioning on observed middle-layer values.
+#
+# `observed_mask[i,j] == true` means the value `ylats_old[i,j]` is observed/fixed and should NOT be updated.
+# The HMC dynamics are run in the subspace of missing coordinates, but the log-density is computed on the
+# full vector so the update targets p(z_miss | z_obs, y, ...).
+function hmc_one_iteration_masked(
+    nLeapfrog,
+    ϵ,
+    ylats_old,
+    yobs,
+    weights_NN,
+    σ_ylats,
+    σ_yobs,
+    ycorr,
+    activation_function,
+    ycorr_yobs,
+    observed_mask,
+)
+    nobs, ntraits = size(ylats_old)
+    if size(observed_mask) != (nobs, ntraits)
+        error("NNMM: observed_mask size mismatch in masked HMC latent update")
+    end
+
+    ylats_old = copy(ylats_old)
+    ylats_new = copy(ylats_old)
+    is_linear_activation = occursin("mylinear", string(nameof(typeof(activation_function))))
+    T = eltype(ylats_new)
+    ϵT = T(ϵ)
+
+    missing_mask = .!observed_mask
+
+    # step 1: sample momentum only for missing coordinates
+    Φ = randn(T, nobs, ntraits)
+    Φ .*= missing_mask
+    log_p_old = calc_log_p_z(
+        ylats_old,
+        yobs,
+        weights_NN,
+        σ_ylats,
+        σ_yobs,
+        ycorr,
+        activation_function,
+        ycorr_yobs,
+    ) .- 0.5 .* sum(Φ .^ 2, dims=2)
+
+    # step 2: leapfrog updates (restricted to missing coordinates)
+    Φ .+= (ϵT / 2) .* calc_gradient_z(
+        ylats_new,
+        yobs,
+        weights_NN,
+        σ_ylats,
+        σ_yobs,
+        ycorr,
+        activation_function,
+        ycorr_yobs,
+    ) .* missing_mask
+
+    for leap_i in 1:nLeapfrog
+        ylats_tmp = copy(ylats_new)
+        ylats_new .+= ϵT .* Φ
+        ycorr .+= ϵT .* Φ
+
+        if is_linear_activation
+            ycorr_yobs .+= (ylats_tmp - ylats_new) * weights_NN
+        else
+            ycorr_yobs .+= (activation_function.(ylats_tmp) .- activation_function.(ylats_new)) * weights_NN
+        end
+
+        grad = calc_gradient_z(
+            ylats_new,
+            yobs,
+            weights_NN,
+            σ_ylats,
+            σ_yobs,
+            ycorr,
+            activation_function,
+            ycorr_yobs,
+        )
+        if leap_i == nLeapfrog
+            Φ .+= (ϵT / 2) .* grad .* missing_mask
+        else
+            Φ .+= ϵT .* grad .* missing_mask
+        end
+    end
+
+    # step 3: Metropolis accept/reject
+    log_p_new = calc_log_p_z(
+        ylats_new,
+        yobs,
+        weights_NN,
+        σ_ylats,
+        σ_yobs,
+        ycorr,
+        activation_function,
+        ycorr_yobs,
+    ) .- 0.5 .* sum(Φ .^ 2, dims=2)
+
+    r = exp.(log_p_new .- log_p_old) # (n,1)
+    nojump = rand(T, nobs) .> r
+
+    for i in 1:nobs
+        if nojump[i]
+            ylats_new[i, :] = ylats_old[i, :]
+        end
+    end
+
+    return ylats_new
+end
+
 """
     sample_latent_traits_linear_gaussian(μ_ylats, y_centered, weights_NN, σ_ylats, σ_yobs)
 
@@ -210,4 +319,239 @@ function sample_latent_traits_linear_gaussian(μ_ylats, y_centered, weights_NN, 
         error("NNMM: non-finite draw in linear latent update")
     end
     return ylats_new
+end
+
+"""
+    sample_missing_latent_traits_linear_gaussian!(ylats, μ_ylats, y_centered, weights_NN, σ_ylats, σ_yobs, observed_mask)
+
+Sample *missing* latent-trait/omics entries for a linear-activation NNMM update.
+
+Model for each individual `i`:
+- Prior (from 1→2 layer): `z_i ~ Normal(μ_i, σ_ylats)`
+- Likelihood (2→3, linear): `y_centered_i ~ Normal(z_i' * weights_NN, σ_yobs)`
+
+Entries with `observed_mask[i,j] == true` are treated as fixed/observed and are **not** updated.
+Missing entries are sampled from the exact Gaussian conditional
+`p(z_miss | z_obs, y_centered, ...)`.
+
+`y_centered` must be `y - Xb` (i.e., phenotype with all non-omics effects removed) and aligned
+to the rows of `ylats`/`μ_ylats`.
+
+Updates `ylats` in-place and returns it.
+"""
+function sample_missing_latent_traits_linear_gaussian!(
+    ylats::AbstractMatrix,
+    μ_ylats::AbstractMatrix,
+    y_centered::AbstractVector,
+    weights_NN::AbstractVector,
+    σ_ylats,
+    σ_yobs,
+    observed_mask::AbstractMatrix
+)
+    nobs, ntraits = size(μ_ylats)
+    if nobs == 0
+        return ylats
+    end
+
+    if size(ylats) != (nobs, ntraits)
+        error("NNMM: ylats size mismatch in linear latent update")
+    end
+    if length(y_centered) != nobs
+        error("NNMM: y_centered length mismatch in linear latent update")
+    end
+    if length(weights_NN) != ntraits
+        error("NNMM: weights_NN length mismatch in linear latent update")
+    end
+    if size(observed_mask) != (nobs, ntraits)
+        error("NNMM: observed_mask size mismatch in linear latent update")
+    end
+
+    T = eltype(μ_ylats)
+    w = T.(weights_NN)
+    y = T.(y_centered)
+    σy = T(σ_yobs)
+    if !isfinite(σy) || σy <= 0
+        error("NNMM: invalid σ_yobs in linear latent update: σ_yobs=$σy")
+    end
+
+    # Fast path: rows where all traits are unobserved (i.e., fully latent) can be sampled in closed form.
+    n_observed_per_row = vec(sum(observed_mask, dims=2))
+    fully_latent = n_observed_per_row .== 0
+    if any(fully_latent)
+        fully_latent_rows = findall(fully_latent)
+        ylats[fully_latent_rows, :] = sample_latent_traits_linear_gaussian(
+            μ_ylats[fully_latent_rows, :],
+            y[fully_latent_rows],
+            w,
+            σ_ylats,
+            σy,
+        )
+    end
+
+    # Remaining rows: partially observed traits. Sample only missing entries conditional on observed ones.
+    partial_rows = findall(n_observed_per_row .> 0)
+    if isempty(partial_rows)
+        return ylats
+    end
+
+    Σ = if σ_ylats isa Number
+        Matrix{T}(I, ntraits, ntraits) .* T(σ_ylats)
+    else
+        Matrix{T}(σ_ylats)
+    end
+
+    if ntraits <= 64
+        groups = Dict{UInt64, Vector{Int}}()
+        for i in partial_rows
+            if all(view(observed_mask, i, :))
+                continue
+            end
+            mask = zero(UInt64)
+            @inbounds for j in 1:ntraits
+                if observed_mask[i, j]
+                    mask |= (UInt64(1) << (j - 1))
+                end
+            end
+            push!(get!(groups, mask, Int[]), i)
+        end
+
+        for (mask, rows) in groups
+            obs_idx = Int[]
+            miss_idx = Int[]
+            @inbounds for j in 1:ntraits
+                if (mask >> (j - 1)) & UInt64(1) == UInt64(1)
+                    push!(obs_idx, j)
+                else
+                    push!(miss_idx, j)
+                end
+            end
+            if isempty(miss_idx)
+                continue
+            end
+
+            w_m = w[miss_idx]
+            w_o = w[obs_idx]
+
+            Σ_mm = Σ[miss_idx, miss_idx]
+            Σ_cond = Σ_mm
+            Σ_mo = isempty(obs_idx) ? zeros(T, length(miss_idx), 0) : Σ[miss_idx, obs_idx]
+            Σ_oo_factor = nothing
+
+            if !isempty(obs_idx)
+                Σ_oo = Σ[obs_idx, obs_idx]
+                jitter = zero(T)
+                for attempt in 1:6
+                    try
+                        Σ_oo_factor = cholesky(Symmetric(Σ_oo + jitter * I))
+                        break
+                    catch
+                        jitter = attempt == 1 ? eps(T) : jitter * T(10)
+                    end
+                end
+                if Σ_oo_factor === nothing
+                    error("NNMM: failed to factor Σ_oo in linear conditional latent update")
+                end
+
+                Σ_oo_inv_Σ_om = Σ_oo_factor \ Σ_mo'
+                Σ_cond = Σ_mm .- Σ_mo * Σ_oo_inv_Σ_om
+            end
+
+            Σ_cond = Symmetric(Σ_cond)
+            Σw = Σ_cond * w_m
+            denom = σy + dot(w_m, Σw)
+            if !isfinite(denom) || denom <= 0
+                error("NNMM: invalid denom for conditional linear latent update: denom=$denom σ_yobs=$σy")
+            end
+
+            cov = Matrix(Σ_cond) .- (Σw * Σw') ./ T(denom)
+            cov = Symmetric(cov)
+
+            L = nothing
+            jitter = zero(T)
+            for attempt in 1:6
+                try
+                    L = cholesky(cov + jitter * I).L
+                    break
+                catch
+                    jitter = attempt == 1 ? eps(T) : jitter * T(10)
+                end
+            end
+            if L === nothing
+                error("NNMM: failed to factor conditional linear latent covariance matrix (cov not PD)")
+            end
+
+            z_obs = ylats[rows, obs_idx]
+            μ_o = μ_ylats[rows, obs_idx]
+            μ_m = μ_ylats[rows, miss_idx]
+
+            μ_cond = μ_m
+            if !isempty(obs_idx)
+                delta = z_obs .- μ_o # n×o
+                tmp = Σ_oo_factor \ delta' # o×n
+                μ_cond = μ_m .+ (Σ_mo * tmp)' # n×k
+            end
+
+            y_eff = y[rows] .- z_obs * w_o
+            resid = y_eff .- μ_cond * w_m
+            μ_post = μ_cond .+ (resid ./ T(denom)) * Σw'
+
+            Z = randn(T, length(rows), length(miss_idx))
+            ylats_draw = μ_post .+ Z * L'
+            if any(x -> !isfinite(x), ylats_draw)
+                error("NNMM: non-finite draw in conditional linear latent update")
+            end
+
+            ylats[rows, miss_idx] = ylats_draw
+        end
+    else
+        # Fallback: per-row conditional draws (avoids building huge grouping keys).
+        for i in partial_rows
+            obs_idx = findall(view(observed_mask, i, :))
+            miss_idx = findall(x -> !x, view(observed_mask, i, :))
+            if isempty(miss_idx)
+                continue
+            end
+
+            z_obs = view(ylats, i, obs_idx)
+            μ_o = view(μ_ylats, i, obs_idx)
+            μ_m = view(μ_ylats, i, miss_idx)
+            w_o = w[obs_idx]
+            w_m = w[miss_idx]
+
+            Σ_mm = Σ[miss_idx, miss_idx]
+            Σ_mo = Σ[miss_idx, obs_idx]
+            Σ_cond = Σ_mm
+            μ_cond = copy(μ_m)
+            if !isempty(obs_idx)
+                Σ_oo = Σ[obs_idx, obs_idx]
+                Σ_oo_factor = cholesky(Symmetric(Σ_oo))
+                tmp = Σ_oo_factor \ (collect(z_obs) .- collect(μ_o))
+                μ_cond .+= Σ_mo * tmp
+                Σ_cond = Σ_mm .- Σ_mo * (Σ_oo_factor \ Σ_mo')
+            end
+
+            Σ_cond = Symmetric(Matrix(Σ_cond))
+            Σw = Σ_cond * w_m
+            denom = σy + dot(w_m, Σw)
+            if !isfinite(denom) || denom <= 0
+                error("NNMM: invalid denom for conditional linear latent update: denom=$denom σ_yobs=$σy")
+            end
+
+            cov = Matrix(Σ_cond) .- (Σw * Σw') ./ T(denom)
+            cov = Symmetric(cov)
+            L = cholesky(cov + eps(T) * I).L
+
+            y_eff = y[i] - dot(w_o, z_obs)
+            resid = y_eff - dot(w_m, μ_cond)
+            μ_post = μ_cond .+ (resid / T(denom)) .* Σw
+
+            draw = μ_post .+ (L * randn(T, length(miss_idx)))
+            if any(x -> !isfinite(x), draw)
+                error("NNMM: non-finite draw in conditional linear latent update")
+            end
+            ylats[i, miss_idx] = draw
+        end
+    end
+
+    return ylats
 end

@@ -69,6 +69,39 @@ using Random
             @test all(!isnan, ebv_df.EBV)
         end
     end
+
+    @testset "Masked HMC Keeps Observed Omics Fixed" begin
+        Random.seed!(1234)
+        ylats_old = Float64[1 10;
+                            2 20;
+                            3 30]
+        observed_mask = Bool[false true;
+                             false true;
+                             false true]
+        yobs = zeros(3)
+        weights = ones(2)
+        σ_ylats = 1.0
+        σ_yobs = 0.01
+        ycorr = copy(ylats_old) # corresponds to μ_ylats = 0
+        activation_fcn = tanh
+        ycorr_yobs = yobs .- activation_fcn.(ylats_old) * weights
+
+        ylats_new = NNMM.hmc_one_iteration_masked(
+            5,
+            0.01,
+            ylats_old,
+            yobs,
+            weights,
+            σ_ylats,
+            σ_yobs,
+            copy(ycorr),
+            activation_fcn,
+            copy(ycorr_yobs),
+            observed_mask,
+        )
+
+        @test ylats_new[:, 2] == ylats_old[:, 2]
+    end
     
     # Cleanup
     rm(data_dir, recursive=true, force=true)

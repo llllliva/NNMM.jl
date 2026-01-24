@@ -14,6 +14,280 @@ Layer 1 (Genotypes X) → Layer 2 (Omics/Latent L) → Layer 3 (Phenotype y)
 
 The package handles various combinations of missing data in the middle layer (omics/latent) and output layer (phenotype) for both training and test individuals.
 
+## Optional skip connection (Layer 1 → Layer 3)
+
+NNMM can optionally include a **direct** Layer 1 → Layer 3 term (a “skip/shortcut connection”) in the 2→3 equation, e.g.:
+
+```
+phenotypes = intercept + omics + geno
+```
+
+This is useful when:
+- you have **partially missing omics** in Layer 2 (NNMM’s main use case), and
+- you also want to fit a **direct genotype effect** on phenotypes, similar to **JWAS multi-class** models.
+
+When a skip term is included:
+- The 2→3 marker part becomes multi-class: `[omics-class, genotype-skip-class]`.
+- Missing-omics sampling (when `activation_function="linear"`) conditions on phenotype residuals **after subtracting the genotype-skip contribution**, so the imputation step remains coherent.
+
+### Separate priors per class (JWAS-like)
+
+Use `Equation(..., class_priors=Dict(...))` in the 2→3 equation to set different priors/hyperparameters for each class:
+
+- key `"omics"` (or your Layer 2 name) controls the omics→phenotype class
+- key `"geno"` (or your Layer 1 name) controls the genotype→phenotype skip class
+
+### Multiple genotype blocks
+
+If Layer 1 was provided as multiple genotype files (partial 1→2), you can either:
+- include all blocks via `+ geno`, or
+- include a subset via explicit terms like `+ geno1 + geno3`.
+
+## NNMM vs “Classic” Bayesian Neural Networks (BNN)
+
+If you come from a Bayesian neural network (BNN) perspective, NNMM looks unusual because it explicitly models and samples the *middle-layer values* (omics/latent traits) instead of treating hidden activations as purely deterministic.
+
+### “Classic” BNN: hidden activations are deterministic
+
+In a conventional BNN, the *weights* are random, but (given weights and inputs) the hidden activations are deterministic:
+
+```
+h = g(W₁*x + b₁)
+y = W₂*h + b₂ + e
+```
+
+You do **not** separately sample `h`; MCMC/HMC targets the posterior over weights `W` (and other parameters), and `h` is just a computed value given `W` and `x`.
+
+If you have observed omics, a “classic” approach is to treat omics as additional inputs (e.g., concatenate `[X, O]`), not as a stochastic intermediate layer generated from `X`.
+
+### NNMM: the middle layer is a stochastic “intermediate trait” layer
+
+NNMM is closer to a hierarchical model used in quantitative genetics: each middle-layer node (omic/latent trait) is treated like an intermediate phenotype with its own residual noise:
+
+```
+h = μ_h + X*α + e_h
+y = μ_y + f(h)*w + e_y
+```
+
+Here we use the same symbol `h` for the “middle layer” in both BNN and NNMM. In NNMM, `h` represents the middle-layer *intermediate traits* (observed omics and/or latent nodes). Some entries of `h` may be observed (omics), and the rest can be missing/latent.
+
+That extra term `e_h` is the key difference versus deterministic hidden activations. It lets NNMM represent the fact that omics are typically **not** perfectly determined by genotype (environment, measurement noise, batch effects, etc.).
+
+You can interpret the “strength” of the genotype→omics link using a heritability-like ratio for a given omic node:
+
+```
+h²_omic = Var(X*α) / Var(h) = σ²_g / (σ²_g + σ²_e)
+```
+
+- If `h²_omic ≈ 1`: the omic is almost deterministic from genotype (`σ²_e ≈ 0`), so `h ≈ X*α`.
+- If `h²_omic ≈ 0`: genotype carries almost no signal for that omic (`σ²_g ≈ 0`), so the omic is mostly residual noise (`h ≈ e_h`).
+
+### Why this is necessary when you put observed omics in the middle layer
+
+NNMM’s stochastic middle layer is what makes it natural to handle the key “omics in the middle” use cases:
+
+- **Observed + missing omics in the same layer**: treat observed entries as fixed anchors and sample only the missing entries (conditioning on the observed ones).
+- **Prediction when phenotypes are missing** (test IDs): missing middle-layer values are drawn from the genotype-based prior `X*α + noise` (no phenotype conditioning).
+- **Realistic genotype→omics uncertainty**: without `e_h`, you are implicitly assuming `h²_omic = 1` (omics are fully genetic), which is often unrealistic and can distort downstream phenotype prediction.
+
+**Concrete 1-omic example (why `h²_omic = 0` matters):**
+
+```
+h_i = μ_h + x_i*α + e_{h,i}
+y_i = μ_y + b*h_i + e_{y,i}
+```
+
+If `h²_omic = 0` (equivalently `α ≈ 0`), then this middle-layer omic `h` is unrelated to genotype. In that case:
+- Genotypes cannot predict `h` (so they cannot impute it accurately when it’s missing).
+- But if `h` is observed at prediction time, it can still predict `y` through `b*h_i`.
+
+This is exactly the situation NNMM is designed for: omics can be *observed intermediates* that help predict phenotypes, while still being only partially (or not at all) explained by genotypes.
+
+### BNN-style vs NNMM-style: when to use which
+
+Both approaches are “Bayesian neural” in the sense that parameters are random and inferred from `y`. The difference is whether the middle layer `h` is treated as a deterministic activation (BNN style) or a stochastic intermediate trait (NNMM style).
+
+**BNN style (deterministic `h`)**
+- **What is sampled:** weights/parameters (e.g., `W₁, W₂, …`), not `h_i` values directly.
+- **Best when:** the middle layer is purely latent (all missing) and represents a flexible mapping `X → y` (possibly nonlinear).
+- **Pros:** no per-individual latent sampling; avoids “fitted-value” behavior from drawing `h_i | y_i`.
+- **Cons:** partially observed/missing omics inside `h` are not handled natively; you typically need imputation or explicit missingness-aware modeling.
+
+**NNMM style (stochastic `h`)**
+- **What is sampled:** model parameters **and** missing/latent entries of `h` (conditioning on observed omics, and on `y` for training IDs).
+- **Best when:** `h` contains observed intermediate traits (omics) that can be partially missing, and you want uncertainty-aware imputation within MCMC.
+- **Pros:** principled missing-data handling for omics in the middle layer; interpretable genotype→omics uncertainty.
+- **Cons:** if a node in `h` is **all missing**, the genotype→that-node mapping is weakly/non-identifiable unless you add additional structure; training `h_i | y_i` updates can behave like an in-sample fitted component.
+
+**Hybrid (common in practice)**
+- Use **BNN style** for "genetic hidden units" that are fully latent (deterministic `h_g = g(X*W + b)` learned from `y`).
+- Use **NNMM style** for omics entries in `h` that can be observed/missing (sample missing parts conditional on observed ones).
+
+## Why "Deterministic Latent" Doesn't Work in NNMM
+
+A natural question arises: can we make latent traits **deterministic** (like BNN-style hidden units) to avoid the "EPV inflation" behavior observed on training data?
+
+### The EPV vs EBV Discrepancy
+
+In NNMM, you may notice:
+- **Training data**: EPV (Estimated Phenotypic Value) has much higher correlation with observed phenotype than EBV (Estimated Breeding Value)
+- **Test data**: EPV ≈ EBV (both show similar correlation with true phenotype)
+
+This is **expected behavior**, not a bug:
+
+| Metric | Training | Test |
+|--------|----------|------|
+| EPV | High accuracy (inflated) | ≈ EBV (true predictive) |
+| EBV | True genetic merit | True genetic merit |
+
+The EPV inflation on training occurs because latent values are sampled **conditioned on the observed phenotype** via HMC:
+
+```
+Training: L_i sampled from posterior p(L | X, y, β, w)
+          → L incorporates information from y_i
+          → EPV_i = f(L_i) * w is "fitted" to y_i
+          
+Test:     L_i sampled from prior p(L | X, β) only
+          → L has no y information (y is missing)
+          → EPV_i = f(L_i) * w ≈ EBV_i
+```
+
+### The "Deterministic Latent" Idea
+
+To eliminate this EPV inflation, one might try making latent traits **deterministic**:
+
+```
+L = X * β    (no residual noise, no sampling)
+```
+
+This would mean:
+- L is a **direct function** of genotypes
+- No HMC sampling needed for latent traits
+- EPV should equal EBV (both purely genotype-based)
+
+### Why It Doesn't Work
+
+**The fundamental problem**: when L is deterministic, the marker effects β **cannot be estimated**.
+
+Consider the NNMM model structure:
+
+```
+Layer 1→2:  L = X*β           (latent = genotypes × marker effects)
+Layer 2→3:  y = intercept + w*L + e_y
+```
+
+In the current MCMC algorithm:
+
+1. **Layer 1→2 update**: Estimate β by fitting L = X*β
+   - Target: L (latent trait values)
+   - Prediction: X*β
+   - **Residual: L - X*β**
+
+2. **Layer 2→3 update**: Estimate w by fitting y = w*L + e
+
+**The critical issue**: With deterministic L = X*β:
+```
+Residual = L - X*β = X*β - X*β = 0
+```
+
+**Zero residual = no information to update β!**
+
+The marker effects β need a "target" to fit against. When L is deterministic, that target **equals the prediction by definition**, so there's nothing to learn.
+
+### Why Sampling Works
+
+With HMC sampling, L is drawn from a **posterior** that considers **both** genotypes and phenotype:
+
+```
+p(L | X, y, β, w) ∝ p(L | X, β) × p(y | L, w)
+                   \_________/   \________/
+                     Prior        Likelihood
+
+Posterior mean ≈ weighted average of:
+  - X*β (genetic prediction)
+  - (y - intercept)/w (phenotype-derived value)
+```
+
+So **L_sampled ≠ X*β**! The residual `L - X*β ≠ 0` carries phenotype information, which allows β to be updated.
+
+### Information Flow Diagram
+
+```
+WITH SAMPLING (current NNMM):
+┌─────────────────────────────────────────────────────────────┐
+│  y (phenotype)                                              │
+│    ↓                                                        │
+│  HMC samples L from posterior p(L|y,β,w)                    │
+│    ↓                                                        │
+│  L_sampled ≠ X*β  (pulled toward explaining y)              │
+│    ↓                                                        │
+│  r = L_sampled - X*β ≠ 0  (contains y info!)                │
+│    ↓                                                        │
+│  β updated using r  ← y information reaches β!              │
+└─────────────────────────────────────────────────────────────┘
+
+WITH DETERMINISTIC (doesn't work):
+┌─────────────────────────────────────────────────────────────┐
+│  y (phenotype)                                              │
+│    ↓                                                        │
+│  Used only to update w in Layer 2→3                         │
+│    ✗ (dead end)                                             │
+│                                                             │
+│  L = X*β  (by definition, no sampling)                      │
+│    ↓                                                        │
+│  r = X*β - X*β = 0  (no information!)                       │
+│    ↓                                                        │
+│  β not updated  ← y information BLOCKED!                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Would Fixing the Weight (w=1) Help?
+
+Another idea: fix the weight between latent and phenotype to 1:
+
+```
+L = X*β        (deterministic)
+y = intercept + 1*L + e_y
+```
+
+This is mathematically equivalent to standard BayesC: `y = intercept + X*β + e_y`
+
+**But it still doesn't work** because:
+- Layer 1→2 residual = L - X*β = 0 (still zero!)
+- The model structure treats layers **separately**
+- Phenotype information doesn't "back-propagate" to β
+
+To make this work, you'd need to **restructure the MCMC** to propagate the phenotype residual back through the layers (like neural network back-propagation). But this would break NNMM's ability to handle **mixed observed/missing omics** in the same layer.
+
+### Comparison: Deterministic vs Sampling (Experimental)
+
+When tested empirically with real data:
+
+| Approach | Train Acc (EPV) | Train Acc (EBV) | Test Acc | Weight (w) |
+|----------|-----------------|-----------------|----------|------------|
+| **Sampling (default)** | 0.958 | 0.689 | 0.328 | -0.21 |
+| **Deterministic** | 0.066 | 0.066 | 0.057 | ~0.003 |
+| **JWAS BayesC** | - | 0.694 | 0.330 | - |
+
+With sampling, NNMM matches JWAS BayesC (EBV ≈ 0.69). With deterministic latent, the weight collapses to ~0, giving essentially random predictions.
+
+### Practical Recommendation
+
+**Use the default sampling approach.** The EPV inflation on training data is expected behavior:
+
+1. **For prediction accuracy**: Evaluate on **test set** results (EPV ≈ EBV on test)
+2. **For genetic merit estimation**: Use **EBV** (not EPV on training)
+3. **Don't worry about EPV inflation on training**: It's a natural consequence of phenotype-conditioned sampling
+
+### Why This Design is Necessary for NNMM
+
+NNMM's strength is handling the "omics in the middle" use case:
+- **Observed omics** (some individuals): Use observed values directly
+- **Missing omics** (some individuals): Sample from posterior (with phenotype info)
+- **Latent traits** (all missing): Sample from posterior (with phenotype info)
+
+A deterministic approach can't handle this mixed case elegantly. The sampling-based approach provides a **unified framework** that naturally handles all combinations of observed/missing data in the middle layer.
+
 ## Summary Table
 
 | Scenario | Layer 2 Status | Phenotype Status | L1→L2 Contribution | L2→L3 Contribution | L2 Sampling |
@@ -339,7 +613,9 @@ out = runNNMM(layers, equations;
               output_folder=joinpath(tmpdir, "results"))
 
 # Get predictions for all individuals (including test)
-epv = out["EBV_NonLinear"]
+# - `EPV_*` uses observed middle-layer values (plus sampled missing/latent values)
+# - `EBV_*` uses genotype-predicted middle-layer values
+epv = out["EPV_Output_NonLinear"]
 ```
 
 The model will automatically:

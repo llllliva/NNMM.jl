@@ -94,6 +94,9 @@ function align_genotypes(mme::MME,output_heritability=false,single_step_analysis
     if single_step_analysis==false
         if mme.output_ID != 0
             for Mi in mme.M
+                if !(Mi isa Genotypes)
+                    continue
+                end
                 if mme.output_ID != Mi.obsID
                     Zo  = map(Float32,mkmat_incidence_factor(mme.output_ID,Mi.obsID))
                     Mi.output_genotypes =  Zo*Mi.genotypes
@@ -114,6 +117,9 @@ function align_genotypes(mme::MME,output_heritability=false,single_step_analysis
         #**********CENTERING?*******************************************************
         if mme.obsID != mme.M[1].obsID
             for Mi in mme.M
+                if !(Mi isa Genotypes)
+                    continue
+                end
                 Z  = map(Float32,mkmat_incidence_factor(mme.obsID,Mi.obsID))
                 genotypes = Z*Mi.genotypes
                 if Mi.isGRM #relationship matrix is provided
@@ -134,6 +140,9 @@ function align_omics(mme::MME,output_heritability=false,single_step_analysis=fal
     if single_step_analysis==false
         if mme.output_ID != 0
             for Mi in mme.M
+                if !(Mi isa Omics)
+                    continue
+                end
                 omicsID=Mi.featureID
                 Mi_genotypes = Matrix(Mi.data[!,omicsID]) #only select the omics columns (i.e., covariates/random effect terms are not included)
                 if mme.output_ID != Mi.obsID
@@ -162,8 +171,11 @@ function align_transformed_omics_with_phenotypes(mme::MME,nonlinear_function)
         #individuals with repeated records or individuals without records
         #
         #**********CENTERING?*******************************************************
-    if mme.obsID != mme.M[1].obsID
+    if mme.M != 0 && length(mme.M) > 0 && mme.obsID != mme.M[1].obsID
         for Mi in mme.M
+            if !(Mi isa Omics)
+                continue
+            end
             Z  = map(Float32,mkmat_incidence_factor(mme.obsID,Mi.obsID))
             omicsID=Mi.featureID
             Mi_omics = Matrix(Mi.data[!,omicsID]) #only select the omics columns (i.e., covariates/random effect terms are not included)
@@ -174,6 +186,9 @@ function align_transformed_omics_with_phenotypes(mme::MME,nonlinear_function)
         end
     else
         for Mi in mme.M
+            if !(Mi isa Omics)
+                continue
+            end
             omicsID=Mi.featureID
             Mi_omics = Matrix(Mi.data[!,omicsID]) #only select the omics columns (i.e., covariates/random effect terms are not included)
             Mi.aligned_omics_w_phenotype = nonlinear_function.(Mi_omics)

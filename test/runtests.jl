@@ -40,4 +40,7 @@ using NNMM
 
     # Internal debug invariants / regression checks
     include("test_invariants.jl")
+
+    # Layer 1 → Layer 3 skip connection (multi-class 2->3)
+    include("test_skip_connection.jl")
 end

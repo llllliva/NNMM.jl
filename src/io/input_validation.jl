@@ -161,21 +161,25 @@ function check_pedigree_genotypes_phenotypes(mme,df,pedigree)
             mme.ped = deepcopy(pedigree)
         end
     end
-    #2)Genotypes
-    if mme.M != false
+    #2)Genotypes (skip non-Genotypes marker classes, e.g. Omics in NNMM 2->3)
+    genotype_terms = Any[]
+    if mme.M != false && mme.M != 0
+        genotype_terms = [Mi for Mi in mme.M if Mi isa Genotypes]
+    end
+    if !isempty(genotype_terms)
         printstyled("Checking genotypes...\n" ,bold=false,color=:green)
-        for Mi in mme.M
-            if Mi.obsID != mme.M[1].obsID
+        for Mi in genotype_terms
+            if Mi.obsID != genotype_terms[1].obsID
                 error("genotypic information is not provided for same individuals")
             end
             if mme.ped != 0
-                pedID=map(string,collect(keys(mme.ped.idMap)))
-                if !issubset(Mi.obsID,pedID)
+                pedID = map(string, collect(keys(mme.ped.idMap)))
+                if !issubset(Mi.obsID, pedID)
                     error("Not all genotyped individuals are found in pedigree!")
                 end
             end
         end
-        if mme.MCMCinfo.single_step_analysis == true && length(mme.M) != 1
+        if mme.MCMCinfo.single_step_analysis == true && length(genotype_terms) != 1
             error("Now only one genomic category is allowed in single-step analysis.")
         end
     end
@@ -185,8 +189,10 @@ function check_pedigree_genotypes_phenotypes(mme,df,pedigree)
     ##remove records according to genotype and pedigree information
     phenoID = df[!,1] = map(string,strip.(map(string,df[!,1]))) #make IDs stripped string
     if mme.M != false && mme.MCMCinfo.single_step_analysis == false #complete genomic data
-        if !issubset(phenoID,mme.M[1].obsID)
-            index = [phenoID[i] in mme.M[1].obsID for i=1:length(phenoID)]
+        # If genomic classes are present (possibly alongside omics marker classes), use genotyped IDs as the reference.
+        reference_ids = !isempty(genotype_terms) ? genotype_terms[1].obsID : mme.M[1].obsID
+        if !issubset(phenoID, reference_ids)
+            index = [phenoID[i] in reference_ids for i=1:length(phenoID)]
             df    = df[index,:]
             printstyled("In this complete genomic data (non-single-step) analyis, ",
             length(index)-sum(index)," phenotyped individuals are not genotyped. ",

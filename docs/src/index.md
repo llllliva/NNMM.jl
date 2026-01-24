@@ -170,6 +170,8 @@ Depth = 2
 Pages = [
   "manual/getstarted.md",
   "manual/tutorial.md",
+  "manual/missing_data.md",
+  "manual/skip_connection.md",
   "manual/public.md",
 ]
 Depth = 2

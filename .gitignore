@@ -31,6 +31,7 @@ tmp_*.csv
 
 # Development workspace (temporary data, outputs, results)
 dev_workspace/
+TempTestData/
 
 # Log files
 *.log
@@ -53,3 +54,10 @@ t*_*.csv
 lcov.info
 *.cov
 .cursor/
+
+# PyNNMM build artifacts (created during benchmark comparisons)
+.pynnmm*/
+benchmarks/.pynnmm*/
+
+# Benchmark scratch outputs (keep local; do not commit)
+benchmarks/scripts/*.csv

@@ -14,35 +14,6 @@ Layer 1 (Genotypes X) → Layer 2 (Omics/Latent L) → Layer 3 (Phenotype y)
 
 The package handles various combinations of missing data in the middle layer (omics/latent) and output layer (phenotype) for both training and test individuals.
 
-## Optional skip connection (Layer 1 → Layer 3)
-
-NNMM can optionally include a **direct** Layer 1 → Layer 3 term (a “skip/shortcut connection”) in the 2→3 equation, e.g.:
-
-```
-phenotypes = intercept + omics + geno
-```
-
-This is useful when:
-- you have **partially missing omics** in Layer 2 (NNMM’s main use case), and
-- you also want to fit a **direct genotype effect** on phenotypes, similar to **JWAS multi-class** models.
-
-When a skip term is included:
-- The 2→3 marker part becomes multi-class: `[omics-class, genotype-skip-class]`.
-- Missing-omics sampling (when `activation_function="linear"`) conditions on phenotype residuals **after subtracting the genotype-skip contribution**, so the imputation step remains coherent.
-
-### Separate priors per class (JWAS-like)
-
-Use `Equation(..., class_priors=Dict(...))` in the 2→3 equation to set different priors/hyperparameters for each class:
-
-- key `"omics"` (or your Layer 2 name) controls the omics→phenotype class
-- key `"geno"` (or your Layer 1 name) controls the genotype→phenotype skip class
-
-### Multiple genotype blocks
-
-If Layer 1 was provided as multiple genotype files (partial 1→2), you can either:
-- include all blocks via `+ geno`, or
-- include a subset via explicit terms like `+ geno1 + geno3`.
-
 ## NNMM vs “Classic” Bayesian Neural Networks (BNN)
 
 If you come from a Bayesian neural network (BNN) perspective, NNMM looks unusual because it explicitly models and samples the *middle-layer values* (omics/latent traits) instead of treating hidden activations as purely deterministic.
@@ -625,6 +596,6 @@ The model will automatically:
 
 ## See Also
 
-- [Tutorial](@ref) - Step-by-step guide to using NNMM.jl
-- [Part 2: NNMM with Missing Latent Traits](@ref) - Example with completely missing middle layer
-- [Part 3: NNMM with Intermediate Omics](@ref) - Example with observed omics
+- [Step-by-Step Tutorial](@ref) - Step-by-step guide to using NNMM.jl
+- [Part 2: Mixed Effect Neural Network (NNMM)](@ref) - Example with completely missing middle layer
+- [Part 3: NNMM with Intermediate Omics Features](@ref) - Example with observed omics

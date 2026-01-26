@@ -142,7 +142,18 @@ With observed omics available for an individual, the closest “JWAS-like” fit
 
 If you want a genotype-only prediction that does **not** assume omics will be available at prediction time, use:
 
-- `results["EBV_NonLinear"]` (propagates genotype information through the network to the output)
+- `results["EBV_NonLinear"]` (genotype-only **total EBV** when skip is present)
+
+When a skip term is present, NNMM also reports the decomposition:
+
+- `results["EBV_Indirect_NonLinear"]`: mediated component (Genotypes → predicted MiddleLayer → y)
+- `results["EBV_Direct_Skip"]`: direct component from the 2→3 genotype-skip marker class only
+
+and by definition:
+
+```
+EBV_NonLinear = EBV_Indirect_NonLinear + EBV_Direct_Skip
+```
 
 ---
 
@@ -157,6 +168,64 @@ Before skip connections, a common workaround to represent a genotype shortcut wa
    - 2→3: `phenotypes = intercept + omics` (no direct `+ genotypes` term).
 
 This creates an *indirect* genotype path `genotypes → latent1 → phenotype` rather than a direct `genotypes → phenotype` class of marker effects.
+
+### Statistical perspective (why “latent-only” is not the same as “skip”)
+
+The “all-missing node” workaround can look similar to a skip term in a **linear-Gaussian** setting, but it is generally a **different statistical model**.
+
+Consider the simplest case:
+
+- Middle-layer latent node `z` is missing for everyone.
+- Linear activation.
+- Single trait.
+
+**No skip + one fully-missing latent node**:
+
+```
+z = X a + e_z
+y = w z + e_y
+```
+
+Substituting out `z` gives:
+
+```
+y = X (w a) + (w e_z + e_y)
+```
+
+This resembles a direct genotype effect with `β = w a`, but with important differences:
+
+- **Factorized (rank-1) effect**: the marker effect is the product `β = w a`. The induced prior on `β` is not the same as putting BayesC directly on `β`.
+- **Weak identifiability / scaling**: `a`, `w`, and the latent residual variance can trade off (e.g., scaling `a` up and `w` down leaves `w a` similar), which can slow MCMC mixing.
+- **Different error model**: the effective noise includes `w e_z`, so the likelihood is not the same as a standard skip model unless you impose strong constraints.
+
+**Skip (direct genotype class in 2→3)**:
+
+```
+y = Z_obs w_obs + X β + e_y
+```
+
+Here `β` is a directly parameterized marker-effect class with its own prior/hyperparameters (via `class_priors`), and it is typically more identifiable and stable.
+
+So, **no-skip + fully-missing latent node is not guaranteed to produce the same posterior or predictions** as skip (especially under BayesC-style priors and when variances are learned).
+
+### When some omics are partially missing
+
+With partially missing omics nodes in the MiddleLayer, NNMM is a joint model that both:
+
+- imputes missing omics using 1→2 (Genotypes → MiddleLayer), and
+- fits 2→3 (MiddleLayer → Phenotypes) using the current/imputed MiddleLayer values.
+
+Key difference:
+
+- **No skip (full mediation)** forces genotype information to influence `y` *only through* the (partly imputed) MiddleLayer. If omics are very missing, prediction can become sensitive to how well that imputation is identified.
+- **Skip (partial mediation)** adds a direct `X β` path, so prediction can remain stable even when omics are missing at training time and/or prediction time.
+
+### Practical guidance
+
+- If your goal is **JWAS-like multi-class BayesC** behavior and stable inference, prefer:
+  - `phenotypes = intercept + omics + genotypes` in 2→3, and
+  - do **not** add a fully-missing latent node unless you have a specific modeling reason.
+- Use a fully-missing latent node only if you intentionally want an extra unobserved mediator dimension—and be aware it can introduce identifiability/mixing issues.
 
 ### Pros of the skip connection (new approach)
 
@@ -183,4 +252,3 @@ This creates an *indirect* genotype path `genotypes → latent1 → phenotype` r
 For an end-to-end real-data comparison against JWAS multi-class BayesC, see:
 
 - `test_real_data_codex.jl` (uses `TempTestData/nnmm_small_dataset`)
-

@@ -1028,23 +1028,44 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	            error("NNMM: non-finite NN weights propagated from 2->3 at iter=$iter")
 	        end
 
-        ########################################################################
-        # 3.1 Save MCMC samples
-        ########################################################################
-        if iter>burnin && (iter-burnin)%output_samples_frequency == 0
-            #MCMC samples from posterior distributions
-            nsamples       = (iter-burnin)/output_samples_frequency
-            output_posterior_mean_variance(mme1,nsamples)
-            #mean and variance of posterior distribution
-            if mme1.pedTrmVec!=0
-                polygenic_effects_variance = inv(mme1.rndTrmVec[polygenic_pos].Gi.val) 
-            else
-                polygenic_effects_variance=false 
-            end
-            output_MCMC_samples(mme1,mme1.R.val,polygenic_effects_variance,outfile)
-            #  if causal_structure != false
-            #      writedlm(causal_structure_outfile,sample4λ_vec',',')
-            #  end
+	        ########################################################################
+	        # 3.1 Save MCMC samples
+	        ########################################################################
+	        if iter>burnin && (iter-burnin)%output_samples_frequency == 0
+	            #MCMC samples from posterior distributions
+	            nsamples       = (iter-burnin)/output_samples_frequency
+	            output_posterior_mean_variance(mme1,nsamples)
+	            #mean and variance of posterior distribution
+	            if mme1.pedTrmVec!=0
+	                polygenic_effects_variance = inv(mme1.rndTrmVec[polygenic_pos].Gi.val) 
+	            else
+	                polygenic_effects_variance=false 
+	            end
+	            # EBV direct skip (Layer 1 -> Layer 3) contribution on output IDs.
+	            direct_skip = false
+	            if mme1.nonlinear_function != false && mme1.output_ID != 0 && mme2.M != 0
+	                n_out = length(mme1.output_ID)
+	                has_skip = any(Mi isa Genotypes for Mi in mme2.M)
+	                if has_skip
+	                    direct_skip_vec = zeros(n_out)
+	                    for Mi in mme2.M
+	                        if Mi isa Genotypes
+	                            if Mi.output_genotypes == false
+	                                error("NNMM: missing output genotypes for 2->3 genotype-skip term; cannot compute EBV_Direct_Skip")
+	                            end
+	                            if size(Mi.output_genotypes, 1) != n_out
+	                                error("NNMM: output genotypes for 2->3 genotype-skip term have $(size(Mi.output_genotypes,1)) rows, expected $n_out")
+	                            end
+	                            direct_skip_vec .+= Mi.output_genotypes * Mi.α[1]
+	                        end
+	                    end
+	                    direct_skip = direct_skip_vec
+	                end
+	            end
+	            output_MCMC_samples(mme1,mme1.R.val,polygenic_effects_variance,outfile; direct_skip=direct_skip)
+	            #  if causal_structure != false
+	            #      writedlm(causal_structure_outfile,sample4λ_vec',',')
+	            #  end
             # Save Layer 2 variances
             writedlm(outfile["layer2_residual_variance"], mme2.R.val', ',')
             if mme2.M != 0 && length(mme2.M) > 0

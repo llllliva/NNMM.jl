@@ -157,6 +157,64 @@ EBV_NonLinear = EBV_Indirect_NonLinear + EBV_Direct_Skip
 
 ---
 
+## Omics-class scaling for BayesC priors (JWAS-like)
+
+When NNMM sets default BayesC(-like) priors for a marker class, it needs to convert a **target genetic variance** (`σ_g²`) into a **marker-effect variance** (`σ_a²`).
+
+For a marker class with design matrix `X` (columns `x_j`), BayesC can be written (conceptually) as:
+
+```math
+g = X (\delta \odot a) \\
+\delta_j \sim \mathrm{Bernoulli}(1-\pi) \\
+a_j \sim \mathcal{N}(0, \sigma_a^2)
+```
+
+Assuming centered predictors and (approximately) independent columns, we have:
+
+```math
+\mathrm{Var}(g) \approx \sum_j \mathrm{Var}(x_j)\,\mathrm{Var}(\delta_j a_j)
+               = \sum_j \mathrm{Var}(x_j)\,(1-\pi)\,\sigma_a^2
+```
+
+so the usual scaling is:
+
+```math
+\sigma_a^2 \approx \frac{\sigma_g^2}{(1-\pi)\,\sum_j \mathrm{Var}(x_j)}
+```
+
+### Why `nFeatures` worked before (and when it still does)
+
+If your predictors are standardized so `Var(x_j) ≈ 1` for all features, then:
+
+```math
+\sum_j \mathrm{Var}(x_j) \approx n_\text{features}
+```
+
+which recovers the older NNMM scaling:
+
+```math
+\sigma_a^2 \approx \frac{\sigma_g^2}{(1-\pi)\,n_\text{features}}
+```
+
+### Why omics needs `∑ var(feature_j)` (unstandardized features)
+
+Omics features are often **not standardized** and can have very different units/scales, so `∑ Var(x_j)` can be far from `nFeatures`.
+Using `nFeatures` in that situation makes the prior (and therefore the posterior) depend on arbitrary measurement units, and it can prevent NNMM from matching **JWAS multi-class BayesC** in the complete-omics case.
+
+To make the omics marker class behave more JWAS-like, NNMM now computes the omics analogue of JWAS’s genotype `sum2pq` as:
+
+```math
+\sum_j \mathrm{Var}(\text{omics feature}_j)
+```
+
+and uses that value in the `σ_g² → σ_a²` conversion for omics.
+
+### Implementation notes
+
+- The change is implemented in `src/markers/genotype_tools.jl` in `genetic2marker(::Omics, π)`.
+- Per-feature variances are computed **ignoring `missing` values**, and the denominator is clamped away from 0 to avoid numerical issues.
+- If you pre-standardize omics so each feature has variance ≈ 1, the new scaling reduces to the old `nFeatures` scaling.
+
 ## How this differs from the older “all-missing node” pattern
 
 Before skip connections, a common workaround to represent a genotype shortcut was:

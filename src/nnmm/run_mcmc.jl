@@ -35,6 +35,7 @@ Run Neural Network Mixed Model (NNMM) analysis.
 - `chain_length::Integer=100`: Total MCMC iterations
 - `burnin::Integer=0`: Number of burn-in iterations to discard
 - `output_samples_frequency::Integer`: Save every nth sample (default: auto)
+- `output_prediction_frequency::Integer`: Save every nth prediction sample for EBV/EPV (default: `output_samples_frequency`)
 - `update_priors_frequency::Integer=0`: Update prior parameters every n iterations
 
 ## Output Settings
@@ -74,15 +75,16 @@ results = runNNMM([layer1, layer2, layer3], [eq1, eq2],
 See also: [`Layer`](@ref), [`Equation`](@ref), [`describe`](@ref)
 """
 function runNNMM(layers, equations;
-                #MCMC
-                chain_length::Integer             = 100,
-                burnin::Integer                   = 0,
-                output_samples_frequency::Integer = chain_length>1000 ? div(chain_length,1000) : 1,
-                update_priors_frequency::Integer  = 0,
-                #Genomic Prediction
-                outputEBV                       = true,
-                output_heritability             = true,
-                prediction_equation             = false,
+                 #MCMC
+                 chain_length::Integer             = 100,
+                 burnin::Integer                   = 0,
+                 output_samples_frequency::Integer = chain_length>1000 ? div(chain_length,1000) : 1,
+                 output_prediction_frequency::Integer = output_samples_frequency,
+                 update_priors_frequency::Integer  = 0,
+                 #Genomic Prediction
+                 outputEBV                       = true,
+                 output_heritability             = true,
+                 prediction_equation             = false,
                 #MISC
                 seed                            = false,
                 printout_model_info             = true,
@@ -979,7 +981,7 @@ function runNNMM(layers, equations;
 
     #1->2
     mme_all[1].MCMCinfo = MCMCinfo(heterogeneous_residuals,
-                   chain_length,burnin,output_samples_frequency,
+                   chain_length,burnin,output_samples_frequency,output_prediction_frequency,
                    printout_model_info,printout_frequency, single_step_analysis,
                    fitting_J_vector,missing_phenotypes,
                    update_priors_frequency,outputEBV,output_heritability,prediction_equation,
@@ -988,7 +990,7 @@ function runNNMM(layers, equations;
     #2->3
     missing_phenotypes=true # Bayesian Alphabet
     mme_all[2].MCMCinfo = MCMCinfo(heterogeneous_residuals,
-                            chain_length,burnin,output_samples_frequency,
+                            chain_length,burnin,output_samples_frequency,output_prediction_frequency,
                             printout_model_info,printout_frequency, single_step_analysis,
                             fitting_J_vector,
                             missing_phenotypes, ##NN-MM -> missing hidden nodes will be sampled

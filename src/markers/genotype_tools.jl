@@ -338,5 +338,28 @@ end
 
 function genetic2marker(M::Omics, π::Real)
     πf = Float64(π)
-    M.G.val = M.genetic_variance.val / ((1 - πf) * M.nFeatures)
+    # Omics features are general continuous covariates; unlike genotype markers (0/1/2),
+    # there is no closed-form `sum2pq` based on allele frequencies. To make the prior
+    # invariant to feature scaling, use the sum of per-feature variances as the
+    # analogue of `sum2pq`:
+    #   Var(Xa) ≈ (1-π) * σ_a² * Σ_j Var(X_j)
+    #   ⇒ σ_a² ≈ σ_g² / ((1-π) * Σ_j Var(X_j))
+    sumvar = 0.0
+    if M.data isa DataFrame
+        # Prefer column-wise accumulation to avoid materializing a dense matrix.
+        for fid in M.featureID
+            col = M.data[!, fid]
+            v = filter(isfinite, skipmissing(col))
+            if length(v) >= 2
+                sumvar += var(v; corrected=true)
+            end
+        end
+    else
+        # Fallback for matrix-like omics storage (no missings expected).
+        X = Matrix(M.data)
+        sumvar = float(sum(var(X; dims=1)))
+    end
+    denom = (1 - πf) * max(sumvar, eps(Float64))
+    denom = max(denom, eps(Float64))
+    M.G.val = M.genetic_variance.val / denom
 end

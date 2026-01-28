@@ -130,6 +130,7 @@ function main()
     chain_length = _env_int("MCMC_CHAIN_LENGTH", 200)
     burnin = _env_int("MCMC_BURNIN", 50)
     seed = _env_int("SEED", 12345)
+    prediction_freq = _env_int("MCMC_PREDICTION_FREQUENCY", 0)
 
     project_root = abspath(joinpath(@__DIR__, "..", ".."))
     data_dir = joinpath(project_root, "TempTestData", "nnmm_small_dataset", "input_files", "data1")
@@ -425,6 +426,7 @@ function main()
                     chain_length=chain_length,
                     burnin=burnin,
                     output_samples_frequency=max(1, div(chain_length, 20)),
+                    output_prediction_frequency=(prediction_freq <= 0 ? max(1, div(chain_length, 20)) : prediction_freq),
                     printout_model_info=false,
                     printout_frequency=10^9,
                     output_folder=joinpath(out_dir, "nnmm_" * model_name * "_tr$(tr_miss)_te$(te_miss)_" * Dates.format(now(), "HHMMSS")),

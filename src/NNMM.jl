@@ -253,6 +253,7 @@ function getMCMCinfo(mme)
     @printf("%-30s %20s\n","starting_value",mme.sol != false ? "true" : "false")
     @printf("%-30s %20d\n","printout_frequency",MCMCinfo.printout_frequency)
     @printf("%-30s %20d\n","output_samples_frequency",MCMCinfo.output_samples_frequency)
+    @printf("%-30s %20d\n","output_prediction_frequency",MCMCinfo.output_prediction_frequency)
     @printf("%-30s %19s\n","constraint on residual variance",mme.R.constraint ? "true" : "false")
     if mme.M != 0
         for Mi in mme.M

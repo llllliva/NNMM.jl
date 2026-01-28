@@ -48,6 +48,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
     chain_length             = mme1.MCMCinfo.chain_length
     burnin                   = mme1.MCMCinfo.burnin
     output_samples_frequency = mme1.MCMCinfo.output_samples_frequency
+    output_prediction_frequency = mme1.MCMCinfo.output_prediction_frequency
     output_folder            = mme1.MCMCinfo.output_folder
     
     invweights1               = mme1.invweights
@@ -1029,9 +1030,9 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	        end
 
 	        ########################################################################
-	        # 3.1 Save MCMC samples
+	        # 3.1 Save MCMC samples (model parameters, marker effects, hyperparameters)
 	        ########################################################################
-	        if iter>burnin && (iter-burnin)%output_samples_frequency == 0
+	        if iter > burnin && (iter - burnin) % output_samples_frequency == 0
 	            #MCMC samples from posterior distributions
 	            nsamples       = (iter-burnin)/output_samples_frequency
 	            output_posterior_mean_variance(mme1,nsamples)
@@ -1071,17 +1072,26 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
             if mme2.M != 0 && length(mme2.M) > 0
                 writedlm(outfile["layer2_effect_variance"], mme2.M[1].G.val', ',')
             end
-	            # Save EPV (Estimated Phenotypic Value) using OBSERVED omics
-	            # EPV = activation(observed_omics) * weights_NN
-	            # This complements EBV_NonLinear which uses PREDICTED omics from genotypes
-	            if mme1.nonlinear_function != false && mme2.M != 0 && length(mme2.M) > 0
+	        end
+
+	        ########################################################################
+	        # 3.2 Save prediction samples (EPV)
+	        #
+	        # Allow EPV/EPV_Output to be saved more frequently than marker effects to
+	        # reduce Monte Carlo error in posterior-mean predictions without dumping
+	        # huge marker-effect files each iteration.
+	        ########################################################################
+	        if iter > burnin && (iter - burnin) % output_prediction_frequency == 0
+	            # Save EPV (Estimated Phenotypic Value) using OBSERVED omics.
+	            # EPV = activation(observed_omics) * weights_NN (+ genotype-skip terms if present)
+	            if mme1.nonlinear_function != false && mme2.M != 0 && length(mme2.M) > 0 && haskey(outfile, "EPV_NonLinear")
 	                observed_omics = mme2.M[1].aligned_omics_w_phenotype
 	                if mme1.is_activation_fcn == true
 	                    # `aligned_omics_w_phenotype` is already activation-transformed (see align_transformed_omics_with_phenotypes),
 	                    # so do NOT apply the activation function a second time.
 	                    EPV_NN = observed_omics * mme1.weights_NN
 	                else
-	                    EPV_NN = mme1.nonlinear_function.(Tuple([view(observed_omics,:,i) for i in 1:size(observed_omics,2)])...)
+	                    EPV_NN = mme1.nonlinear_function.(Tuple([view(observed_omics, :, i) for i in 1:size(observed_omics, 2)])...)
 	                end
 	                # Add optional genotype-skip contributions (Layer 1 → Layer 3 direct term).
 	                if length(mme2.M) > 1
@@ -1094,7 +1104,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	                writedlm(outfile["EPV_NonLinear"], EPV_NN', ',')
 	            end
 
-            # Save EPV on output IDs (includes test individuals even if phenotype is missing).
+	            # Save EPV on output IDs (includes test individuals even if phenotype is missing).
 	            if mme1.output_ID != 0 && haskey(outfile, "EPV_Output_NonLinear")
 	                # `ylats_old` is the current latent/observed omics matrix in mme1.obsID order.
 	                # Align to mme1.output_ID order if needed, then compute EPV under the same
@@ -1107,8 +1117,8 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	                    omics_out = nonlinear_function.(omics_out)
 	                    EPV_out = omics_out * mme1.weights_NN
 	                else
-                    EPV_out = mme1.nonlinear_function.(Tuple([view(omics_out, :, i) for i in 1:size(omics_out, 2)])...)
-                end
+	                    EPV_out = mme1.nonlinear_function.(Tuple([view(omics_out, :, i) for i in 1:size(omics_out, 2)])...)
+	                end
 	                # Add genotype-skip contributions on output IDs.
 	                if mme2.M != 0 && length(mme2.M) > 1
 	                    n_out = length(mme1.output_ID)
@@ -1124,12 +1134,12 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	                        end
 	                    end
 	                end
-                writedlm(outfile["EPV_Output_NonLinear"], EPV_out', ',')
-            end
-        end
-        ########################################################################
-        # 3.2 Printout
-        ########################################################################
+	                writedlm(outfile["EPV_Output_NonLinear"], EPV_out', ',')
+	            end
+	        end
+	        ########################################################################
+	        # 3.3 Printout
+	        ########################################################################
         if iter%mme1.MCMCinfo.printout_frequency==0 && iter>burnin
             println("\nPosterior means at iteration: ",iter)
             # Print residual variance in a clean format

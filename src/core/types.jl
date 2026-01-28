@@ -269,6 +269,7 @@ A struct for storing MCMC run configuration and parameters.
 - `chain_length`: Total number of MCMC iterations
 - `burnin`: Number of burn-in iterations to discard
 - `output_samples_frequency`: How often to save MCMC samples
+- `output_prediction_frequency`: How often to save EBV/EPV prediction samples (may be more frequent than marker-effect samples)
 - `printout_model_info`: Whether to print model information
 - `printout_frequency`: How often to print progress
 - `single_step_analysis`: Whether using single-step genomic evaluation
@@ -289,6 +290,7 @@ mutable struct MCMCinfo
     chain_length
     burnin
     output_samples_frequency
+    output_prediction_frequency
     printout_model_info
     printout_frequency
     single_step_analysis

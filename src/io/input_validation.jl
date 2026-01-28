@@ -15,6 +15,10 @@ function errors_args(mme)
         error("output_samples_frequency should be an integer > 0.")
     end
 
+    if mme.MCMCinfo.output_prediction_frequency <= 0
+        error("output_prediction_frequency should be an integer > 0.")
+    end
+
     if mme.M != 0
         for Mi in mme.M
             if !(Mi.method in ["BayesL","BayesC","BayesB","BayesA","RR-BLUP","GBLUP"])

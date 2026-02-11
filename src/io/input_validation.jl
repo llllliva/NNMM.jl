@@ -314,7 +314,13 @@ function set_default_priors_for_variance_components(mme,df)
     num_binary_trait = length(binary_trait_index)
     vare[binary_trait_index,binary_trait_index]=I(num_binary_trait) #for multiple binary traits, their vare=I
     mme.R.val = mme.ROld = vare
-    mme.R.scale = mme.R.val*(mme.R.df - mme.nModels - 1)
+    if mme.R.constraint == true
+      # Per-trait Scale-Inv-χ² prior (diagonal residual covariance)
+      mme.R.scale = mme.R.val*(mme.R.df - 2)/mme.R.df
+    else
+      # Full Inverse-Wishart prior
+      mme.R.scale = mme.R.val*(mme.R.df - mme.nModels - 1)
+    end
     if num_binary_trait == mme.nModels # all traits are binary
         mme.R.constraint = true 
         mme.R.estimate_variance = false #if all traits are binary, do not need to sample R because it is fixed to I

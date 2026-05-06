@@ -217,6 +217,8 @@ mutable struct Equation
     constraint_R::Bool
     # Optional per-class priors for multi-class marker models (e.g., MiddleLayer + Genotypes in 2->3)
     class_priors
+    # Optional named subsets of middle-layer omics columns for separate 2->3 marker classes
+    omics_groups
     
     function Equation(;from_layer_name::String, 
                       to_layer_name::String, 
@@ -243,7 +245,8 @@ mutable struct Equation
                       estimate_variance_R::Bool=true,
                       estimate_scale_R::Bool=false,
                       constraint_R::Bool=true,
-                      class_priors=false)
+                      class_priors=false,
+                      omics_groups=false)
         
         # Handle deprecated aliases (omics_name, phenotype_name) for backward compatibility
         if traits == false
@@ -262,6 +265,6 @@ mutable struct Equation
             method, Pi, estimatePi,
             G, G_is_marker_variance, df_G, estimate_variance_G, estimate_scale_G, constraint_G,
             R, df_R, estimate_variance_R, estimate_scale_R, constraint_R,
-            class_priors)    
+            class_priors, omics_groups)
     end
 end

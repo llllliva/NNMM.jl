@@ -32,7 +32,8 @@ end
 
 function megaGBLUP!(Mi::Genotypes, wArray, vare, Rinv; rngs=nothing)
     Threads.@threads for i in 1:length(wArray) #ntraits
-        rng = rngs === nothing ? Random.default_rng() : rngs[Threads.threadid()]
+        tid = Threads.threadid()
+        rng = (rngs === nothing || length(rngs) < tid) ? Random.default_rng() : rngs[tid]
         GBLUP!(Mi.genotypes, Mi.α[i], Mi.D, wArray[i], vare[i,i], Mi.G.val[i,i], Rinv, Mi.nObs; rng=rng)
     end
 end

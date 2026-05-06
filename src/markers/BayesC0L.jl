@@ -1,6 +1,7 @@
 function megaBayesL!(genotypes, wArray, vare; rngs=nothing)
     Threads.@threads for i in 1:length(wArray) #ntraits
-        rng = rngs === nothing ? Random.default_rng() : rngs[Threads.threadid()]
+        tid = Threads.threadid()
+        rng = (rngs === nothing || length(rngs) < tid) ? Random.default_rng() : rngs[tid]
         BayesL!(genotypes.mArray,genotypes.mRinvArray,genotypes.mpRinvm,
             wArray[i],genotypes.α[i],genotypes.gammaArray,vare[i,i],genotypes.G.val[i,i]; rng=rng)
     end
@@ -13,7 +14,8 @@ end
 
 function megaBayesC0!(genotypes, wArray, vare; rngs=nothing)
     Threads.@threads for i in 1:length(wArray) #ntraits
-        rng = rngs === nothing ? Random.default_rng() : rngs[Threads.threadid()]
+        tid = Threads.threadid()
+        rng = (rngs === nothing || length(rngs) < tid) ? Random.default_rng() : rngs[tid]
         BayesL!(genotypes.mArray,genotypes.mRinvArray,genotypes.mpRinvm,
                 wArray[i],genotypes.α[i],[1.0],vare[i,i],genotypes.G.val[i,i]; rng=rng)
     end

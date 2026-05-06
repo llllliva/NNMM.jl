@@ -191,6 +191,50 @@ function runNNMM(layers, equations;
         )
     end
 
+    function _normalize_omics_groups(groups)
+        if groups === false || groups === nothing
+            return false
+        end
+        if !(groups isa AbstractDict)
+            error("NNMM: omics_groups must be a Dict mapping group names to omics column names.")
+        end
+
+        normalized = Dict{String, Vector{String}}()
+        for (group_name, group_traits) in groups
+            name = string(group_name)
+            isempty(strip(name)) && error("NNMM: omics group names cannot be empty.")
+            haskey(normalized, name) && error("NNMM: duplicate omics group name '$name'.")
+
+            traits = if group_traits isa AbstractString
+                [String(group_traits)]
+            elseif group_traits isa AbstractVector
+                string.(collect(group_traits))
+            else
+                error("NNMM: omics group '$name' must map to a vector of column names.")
+            end
+            isempty(traits) && error("NNMM: omics group '$name' cannot be empty.")
+            normalized[name] = traits
+        end
+        return normalized
+    end
+
+    function _validate_omics_groups(groups, omics_traits)
+        groups === false && return
+
+        omics_trait_set = Set(string.(omics_traits))
+        seen_traits = Set{String}()
+        for (group_name, group_traits) in groups
+            for trait in group_traits
+                trait in omics_trait_set ||
+                    error("NNMM: omics group '$group_name' includes '$trait', but it is not listed in the 1->2 traits.")
+                if trait in seen_traits
+                    error("NNMM: omics trait '$trait' appears in more than one omics group.")
+                end
+                push!(seen_traits, trait)
+            end
+        end
+    end
+
     ############################################################################
     # Step1. read genotypes in layer 1
     #  note: need to read genotypes here because "method" is defined in equations
@@ -312,6 +356,11 @@ function runNNMM(layers, equations;
     if omics_name==false
         error("please provide traits in the 1st equation.")
     end
+    omics_name = string.(omics_name)
+    equations[1].traits = omics_name
+
+    omics_groups = _normalize_omics_groups(equations[2].omics_groups != false ? equations[2].omics_groups : equations[1].omics_groups)
+    _validate_omics_groups(omics_groups, omics_name)
 
     #arguments for mme for 2->3 layer
     omics_prior = _resolve_marker_prior(equations[2], layers[2].layer_name)
@@ -427,29 +476,51 @@ function runNNMM(layers, equations;
         error("The order of layers is wrong, or the layer name is not consistent with the equation.")
     end
     #make sure the layer name is used in equations, and only appears once
-    equ_left_tmp, equ_right_tmp = strip.(split(equations[1].equation,"=")) # "omics = intercept + geno"
+    equ_left_tmp, equ_right_tmp = strip.(split(equations[1].equation,"="; limit=2)) # "omics = intercept + geno"
     n_occurrences = length(split(equ_right_tmp, layers[1].layer_name)) - 1 # how many times "geno" appears in the righ of equation, must=1
     if equ_left_tmp != layers[2].layer_name || n_occurrences != 1
         error("The layer name in equation is not consistent with the layer name, and please only include it once in your equation.")
     end
-    equ_left_tmp, equ_right_tmp = strip.(split(equations[2].equation,"=")) # "phenotypes = intercept + omics (+ geno)"
+    equ_left_tmp, equ_right_tmp = strip.(split(equations[2].equation,"="; limit=2)) # "phenotypes = intercept + omics (+ geno)"
     rhs_terms_23 = _parse_rhs_terms(equations[2].equation)
-    # Middle layer term must appear exactly once.
+    if equ_left_tmp != layers[3].layer_name
+        error("The left-hand side in the 2->3 equation must match the 3rd layer name.")
+    end
+    # Middle layer can appear as one combined term (legacy) or as named omics groups.
+    omics_group_names = omics_groups == false ? String[] : collect(keys(omics_groups))
     n_mid = count(==(layers[2].layer_name), rhs_terms_23)
-    if equ_left_tmp != layers[3].layer_name || n_mid != 1
-        error("The layer name in equation is not consistent with the layer name, and please include the middle-layer term exactly once in your equation.")
+    used_omics_groups = [name for name in omics_group_names if name in rhs_terms_23]
+    if omics_groups == false
+        if n_mid != 1
+            error("The layer name in equation is not consistent with the layer name, and please include the middle-layer term exactly once in your equation.")
+        end
+    else
+        if n_mid > 0 && !isempty(used_omics_groups)
+            error("In 2->3, use either the combined middle-layer term '$(layers[2].layer_name)' or named omics groups ($(join(omics_group_names, ", "))). Do not mix both.")
+        end
+        if n_mid == 0 && isempty(used_omics_groups)
+            error("In 2->3, include either '$(layers[2].layer_name)' or at least one named omics group ($(join(omics_group_names, ", "))).")
+        end
     end
     # Validate genotype skip term usage.
     geno_base = layers[1].layer_name
     geno_block_names = [string(g.name) for g in layers[1].data]
+    if omics_groups != false
+        reserved_names = Set(vcat([layers[1].layer_name, layers[2].layer_name, layers[3].layer_name], geno_block_names))
+        for group_name in omics_group_names
+            if group_name in reserved_names
+                error("NNMM: omics group name '$group_name' conflicts with an existing layer or genotype class name.")
+            end
+        end
+    end
     has_base = geno_base in rhs_terms_23
     geno_specific_names = filter(!=(geno_base), geno_block_names)
     has_specific = any(in(rhs_terms_23), geno_specific_names)
     if has_base && has_specific
         error("In 2->3, use either '$(geno_base)' (all genotype blocks) OR specific genotype blocks ($(join(geno_block_names, ", "))). Do not mix both.")
     end
-    # Disallow duplicated layer terms (middle layer + genotype terms).
-    for nm in vcat([layers[2].layer_name, geno_base], geno_block_names)
+    # Disallow duplicated layer terms (middle layer, omics groups, and genotype terms).
+    for nm in vcat([layers[2].layer_name, geno_base], omics_group_names, geno_block_names)
         if count(==(nm), rhs_terms_23) > 1
             error("In 2->3, term '$nm' appears more than once. Please include each layer term at most once.")
         end
@@ -549,14 +620,14 @@ function runNNMM(layers, equations;
     ############################################################################
     if is_fully_connected_12
         equation_12 = ""
-        _, equ_right = strip.(split(equations[1].equation,"=")) # "intercept + x1 + geno" 
+        _, equ_right = strip.(split(equations[1].equation,"="; limit=2)) # "intercept + x1 + geno" 
         for i in layers[2].data[1].featureID #the name of omics
             equation_12 = equation_12 * i * "=" * equ_right * ";"
         end
     else #partial connected 1->2 layer
         equation_12 = ""
         for i in 1:length(layers[1].data)
-            _, equ_right = strip.(split(equations[1].equation,"=")) # "intercept + x1 + geno"
+            _, equ_right = strip.(split(equations[1].equation,"="; limit=2)) # "intercept + x1 + geno"
             #in equ_right, replace layer name (e.g., "geno") with the name of the i-th genotype (e.g., "geno1")
             equ_right = replace(equ_right, layers[1].layer_name => layers[1].data[i].name)
             omics_name = layers[2].data[1].featureID[i]
@@ -584,7 +655,7 @@ function runNNMM(layers, equations;
     #  - new: y1=intercept+omics
     ############################################################################
     equation_23 = ""
-    _, equ_right = strip.(split(equations[2].equation,"=")) # "intercept + omics"
+    _, equ_right = strip.(split(equations[2].equation,"="; limit=2)) # "intercept + omics"
    
     for i in phenoID
         equation_23 = equation_23 * i * "=" * equ_right * ";"
@@ -805,23 +876,63 @@ function runNNMM(layers, equations;
     omics = []
     genotypes_skip = []
     whichterm = 1
+
+    function _check_omics_covariance_dimensions(omicsi, nModels, class_name)
+        nModels == 1 && return
+        for val in (omicsi.G.val, omicsi.genetic_variance.val)
+            if val != false
+                if !(val isa AbstractMatrix) || size(val, 1) != nModels || size(val, 2) != nModels
+                    error("The genomic covariance matrix for omics class '$class_name' is not a ", nModels, " by ", nModels, " matrix.")
+                end
+            end
+        end
+    end
+
+    function _configure_omics_class!(omicsi, class_name, nModels, lhsVec)
+        omicsi.name = class_name
+        omicsi.ntraits = nModels
+        omicsi.trait_names = string.(lhsVec)
+        if nModels != 1
+            omicsi.G.df = omicsi.G.df + nModels
+        end
+        if is_fully_connected_23
+            _check_omics_covariance_dimensions(omicsi, nModels, class_name)
+        end
+        return omicsi
+    end
+
+    function _make_grouped_omics_class(base_omics, group_name, group_traits, prior, nModels, lhsVec)
+        if prior.method == "GBLUP"
+            error("GBLUP is not supported for middle-layer omics groups in 2->3. Try BayesC, RR-BLUP, etc..")
+        end
+        omicsi = Omics(base_omics.obsID, group_traits, base_omics.nObs, length(group_traits), base_omics.data)
+        omicsi.G = Variance(prior.G_is_marker_variance ? prior.G : false, prior.df_G, false,
+                            prior.estimate_variance_G, prior.estimate_scale_G, prior.constraint_G)
+        omicsi.genetic_variance = Variance(prior.G_is_marker_variance ? false : prior.G, prior.df_G, false,
+                                           prior.estimate_variance_G, prior.estimate_scale_G, prior.constraint_G)
+        omicsi.method = prior.method
+        omicsi.estimatePi = prior.estimatePi
+        omicsi.π = prior.Pi
+        return _configure_omics_class!(omicsi, group_name, nModels, lhsVec)
+    end
+
     for term in modelTerms
-        term_symbol = Symbol(split(term.trmStr,":")[end])
-        if term_symbol == Symbol(layers[2].layer_name) #e.g., :omics
+        term_name = string(split(term.trmStr,":")[end])
+        term_symbol = Symbol(term_name)
+        if omics_groups != false && haskey(omics_groups, term_name)
+          term.random_type = "genotypes" #omics group
+          if term_name ∉ map(x->x.name, omics) #only save unique omics group
+            group_prior = _resolve_marker_prior(equations[2], term_name; fallback_class_name=layers[2].layer_name)
+            omicsi = _make_grouped_omics_class(layers[2].data[1], term_name, omics_groups[term_name],
+                                               group_prior, nModels, lhsVec)
+            push!(omics, omicsi)
+          end
+        elseif term_symbol == Symbol(layers[2].layer_name) #e.g., :omics
           term.random_type = "genotypes" #omics
           omicsi = layers[2].data[1]
-          omicsi.name = string(term_symbol)
+          omicsi.name = term_name
           if omicsi.name ∉ map(x->x.name, omics) #only save unique omics
-            omicsi.ntraits = nModels
-            omicsi.trait_names = string.(lhsVec)
-            if nModels != 1
-                omicsi.G.df = omicsi.G.df + nModels
-            end
-            if is_fully_connected_23 && (omicsi.G.val != false || omicsi.genetic_variance.val != false)
-              if size(omicsi.G.val,1) != nModels && size(omicsi.genetic_variance.val,1) != nModels
-                error("The genomic covariance matrix is not a ",nModels," by ",nModels," matrix.")
-              end
-            end
+            _configure_omics_class!(omicsi, term_name, nModels, lhsVec)
             push!(omics,omicsi)
           end
         end

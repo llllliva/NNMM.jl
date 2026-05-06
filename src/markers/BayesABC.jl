@@ -31,7 +31,8 @@ sampling across traits.
 """
 function megaBayesABC!(genotypes, wArray, vare, locus_effect_variances; rngs=nothing)
     Threads.@threads for i in 1:length(wArray) #ntraits
-        rng = rngs === nothing ? Random.default_rng() : rngs[Threads.threadid()]
+        tid = Threads.threadid()
+        rng = (rngs === nothing || length(rngs) < tid) ? Random.default_rng() : rngs[tid]
         BayesABC!(genotypes.mArray, genotypes.mRinvArray, genotypes.mpRinvm,
                   wArray[i], genotypes.α[i], genotypes.β[i], genotypes.δ[i], vare[i,i],
                   [vari[i,i] for vari in locus_effect_variances], genotypes.π[i]; rng=rng)

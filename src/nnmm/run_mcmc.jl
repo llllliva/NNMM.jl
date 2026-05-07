@@ -1139,6 +1139,19 @@ function runNNMM(layers, equations;
     printstyled("initialize missing omics data \n",bold=false,color=:green)
     #initiliza missing omics data  (after check_pedigree_genotypes_phenotypes() because non-genotyped inds are removed)
     nnlmm_initialize_missing_with_mean(mme_all[1],layers[2].data[1].data)
+    # Named omics groups in the 2->3 equation are separate Omics objects created
+    # from the middle-layer table before phenotype merging and missing-value
+    # initialization. Refresh them so grouped marker classes use the imputed,
+    # ID-aligned middle-layer data rather than the original table with missings.
+    if mme_all[2].M != 0
+        for Mi in mme_all[2].M
+            if Mi isa Omics
+                Mi.data = layers[2].data[1].data
+                Mi.obsID = AbstractString[string.(layers[2].data[1].data.ID)...]
+                Mi.nObs = length(Mi.obsID)
+            end
+        end
+    end
 
     #1->2
     printstyled("1->2 prediction setup: \n",bold=false,color=:green)

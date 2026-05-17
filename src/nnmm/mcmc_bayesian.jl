@@ -1107,6 +1107,7 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
 	            #MCMC samples from posterior distributions
 	            nsamples       = (iter-burnin)/output_samples_frequency
 	            output_posterior_mean_variance(mme1,nsamples)
+	            output_posterior_mean_variance(mme2,nsamples)
 	            #mean and variance of posterior distribution
 	            if mme1.pedTrmVec!=0
 	                polygenic_effects_variance = inv(mme1.rndTrmVec[polygenic_pos].Gi.val) 
@@ -1252,5 +1253,18 @@ function nnmm_MCMC_BayesianAlphabet(mme1,df1,mme2,df2)
                          mme1.pedTrmVec!=0 ? mme1.G0Mean : false,
                          mme1.solMean2,mme1.meanVare2,
                          mme1.pedTrmVec!=0 ? mme1.G0Mean2 : false)
+    output_ID2 = mme2.output_ID
+    mme2.output_ID = 0
+    output2=output_result(mme2,output_folder,
+                          mme2.solMean,mme2.meanVare,
+                          mme2.pedTrmVec!=0 ? mme2.G0Mean : false,
+                          mme2.solMean2,mme2.meanVare2,
+                          mme2.pedTrmVec!=0 ? mme2.G0Mean2 : false)
+    mme2.output_ID = output_ID2
+    for (key,value) in output2
+        if startswith(key, "marker effects ")
+            output[key] = value
+        end
+    end
     return output
 end
